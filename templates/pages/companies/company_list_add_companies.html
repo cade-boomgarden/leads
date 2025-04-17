@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Companies to {{ company_list.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'company_list_list' %}">
+            <i class="ph ph-list-bullets"></i> Company Lists
+        </a>
+        <span class="divider">/</span>
+        <a href="{% url 'company_list_detail' company_list.id %}">{{ company_list.name }}</a>
+        <span class="divider">/</span>
+        <span>Add Companies</span>
+    </div>
+    
+    <h1>Add Companies to "{{ company_list.name }}"</h1>
+</div>
+
+<div class="form-container">
+    <form method="post" id="add-companies-form">
+        {% csrf_token %}
+        
+        {% if form.companies.queryset.count > 0 %}
+        <p class="form-instruction">
+            Select the companies you want to add to this list. You can select multiple companies.
+        </p>
+        
+        <div class="filter-controls">
+            <input type="text" id="company-filter" placeholder="Filter companies..." class="filter-input">
+            <div class="filter-actions">
+                <button type="button" id="select-all" class="btn btn-sm">Select All</button>
+                <button type="button" id="deselect-all" class="btn btn-sm btn-secondary">Deselect All</button>
+            </div>
+        </div>
+        
+        <div class="companies-selection">
+            {% for company in form.companies.queryset %}
+            <div class="company-checkbox-item">
+                <label class="company-checkbox-label">
+                    <input type="checkbox" name="companies" value="{{ company.id }}" class="company-checkbox">
+                    <div class="company-info">
+                        <div class="company-name">{{ company.name }}</div>
+                        {% if company.city or company.state %}
+                        <div class="company-location">
+                            {% if company.city %}{{ company.city }}{% endif %}
+                            {% if company.state %}{% if company.city %}, {% endif %}{{ company.state }}{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if company.domain %}
+                        <div class="company-domain">{{ company.domain }}</div>
+                        {% endif %}
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn">Add Selected Companies</button>
+            <a href="{% url 'company_list_detail' company_list.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="ph ph-buildings"></i>
+            <p>There are no companies available to add to this list.</p>
+            <div class="empty-actions">
+                <a href="{% url 'company_create' %}" class="btn">
+                    <i class="ph ph-plus"></i> Create New Company
+                </a>
+                <a href="{% url 'company_list_detail' company_list.id %}" class="btn btn-secondary">
+                    <i class="ph ph-arrow-left"></i> Go Back to List
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('alpine:init', () => {
+        // Filter functionality
+        const filterInput = document.getElementById('company-filter');
+        const companyItems = document.querySelectorAll('.company-checkbox-item');
+        
+        filterInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            companyItems.forEach(item => {
+                const companyName = item.querySelector('.company-name').textContent.toLowerCase();
+                const companyLocation = item.querySelector('.company-location') ? 
+                                      item.querySelector('.company-location').textContent.toLowerCase() : '';
+                const companyDomain = item.querySelector('.company-domain') ? 
+                                     item.querySelector('.company-domain').textContent.toLowerCase() : '';
+                
+                // Show the item if any of its content matches the search term
+                if (companyName.includes(searchTerm) || 
+                    companyLocation.includes(searchTerm) || 
+                    companyDomain.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Select/Deselect all functionality
+        const selectAllBtn = document.getElementById('select-all');
+        const deselectAllBtn = document.getElementById('deselect-all');
+        const checkboxes = document.querySelectorAll('.company-checkbox');
+        
+        selectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                // Only select visible items
+                if (checkbox.closest('.company-checkbox-item').style.display !== 'none') {
+                    checkbox.checked = true;
+                }
+            });
+        });
+        
+        deselectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .form-container {
+        margin-top: 1.5rem;
+    }
+    
+    .form-instruction {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
+    
+    .filter-input {
+        flex-grow: 1;
+        max-width: 300px;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .companies-selection {
+        max-height: 500px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .company-checkbox-item {
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .company-checkbox-item:last-child {
+        border-bottom: none;
+    }
+    
+    .company-checkbox-label {
+        display: flex;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    
+    .company-checkbox-label:hover {
+        background-color: var(--background-alt);
+    }
+    
+    .company-info {
+        flex-grow: 1;
+    }
+    
+    .company-name {
+        font-weight: bold;
+    }
+    
+    .company-location,
+    .company-domain {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+    
+    .form-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'company_list' %}">
+            <i class="ph ph-buildings"></i> Companies
+        </a>
+        <span class="divider">/</span>
+        <span>{{ company.name }}</span>
+    </div>
+    
+    <h1>{{ company.name }}</h1>
+    
+    <div class="action-buttons">
+        <a href="{% url 'company_update' company.id %}" class="btn">
+            <i class="ph ph-pencil"></i> Edit
+        </a>
+        <a href="{% url 'company_delete' company.id %}" class="btn btn-danger">
+            <i class="ph ph-trash"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="company-detail-container">
+    <div class="company-info-card">
+        <div class="card-header">
+            <h2>Company Information</h2>
+            {% if company.rating %}
+            <div class="company-rating">
+                <span class="rating-value">{{ company.rating }}</span>
+                <i class="ph ph-star"></i>
+                {% if company.reviews_count %}
+                <span class="reviews-count">({{ company.reviews_count }} reviews)</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="card-body">
+            <div class="info-group">
+                <div class="info-label">Domain:</div>
+                <div class="info-value">{{ company.domain }}</div>
+            </div>
+            
+            {% if company.website_url %}
+            <div class="info-group">
+                <div class="info-label">Website:</div>
+                <div class="info-value">
+                    <a href="{{ company.website_url }}" target="_blank">{{ company.website_url }}</a>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if company.phone %}
+            <div class="info-group">
+                <div class="info-label">Phone:</div>
+                <div class="info-value">{{ company.phone }}</div>
+            </div>
+            {% endif %}
+            
+            {% if company.address %}
+            <div class="info-group">
+                <div class="info-label">Address:</div>
+                <div class="info-value">
+                    {{ company.address }}
+                    {% if company.city or company.state %}
+                    <br>
+                    {% if company.city %}{{ company.city }}{% endif %}
+                    {% if company.state %}{% if company.city %}, {% endif %}{{ company.state }}{% endif %}
+                    {% if company.state_code %} ({{ company.state_code }}){% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if company.primary_type %}
+            <div class="info-group">
+                <div class="info-label">Business Type:</div>
+                <div class="info-value">{{ company.primary_type }}</div>
+            </div>
+            {% endif %}
+            
+            {% if company.types %}
+            <div class="info-group">
+                <div class="info-label">Categories:</div>
+                <div class="info-value">
+                    {% for type in company.get_types %}
+                    <span class="tag">{{ type }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if company.description %}
+            <div class="info-group description">
+                <div class="info-label">Description:</div>
+                <div class="info-value">{{ company.description }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if company.latitude and company.longitude %}
+    <div class="company-map-card">
+        <div class="card-header">
+            <h2>Location</h2>
+        </div>
+        <div class="card-body">
+            <div class="map-placeholder">
+                <div class="map-coordinates">
+                    <i class="ph ph-map-pin"></i>
+                    <span>{{ company.latitude }}, {{ company.longitude }}</span>
+                </div>
+                <p class="map-message">Map would be displayed here</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="company-lists-card">
+        <div class="card-header">
+            <h2>Company Lists</h2>
+        </div>
+        <div class="card-body">
+            {% if company_lists %}
+            <ul class="lists-container">
+                {% for list in company_lists %}
+                <li>
+                    <a href="{% url 'company_list_detail' list.id %}">{{ list.name }}</a>
+                    <span class="list-count">{{ list.companies.count }} companies</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-lists">This company is not in any lists yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if company.contacts.all %}
+    <div class="company-contacts-card">
+        <div class="card-header">
+            <h2>Contacts</h2>
+        </div>
+        <div class="card-body">
+            <ul class="contacts-container">
+                {% for contact in company.contacts.all %}
+                <li class="contact-item">
+                    <div class="contact-name">{{ contact.first_name }} {{ contact.last_name }}</div>
+                    <div class="contact-email">{{ contact.email }}</div>
+                    {% if contact.position %}
+                    <div class="contact-position">{{ contact.position }}</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .company-detail-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .company-detail-container {
+            grid-template-columns: 2fr 1fr;
+        }
+        
+        .company-info-card {
+            grid-column: 1 / 2;
+        }
+        
+        .company-map-card, 
+        .company-lists-card, 
+        .company-contacts-card {
+            grid-column: 2 / 3;
+        }
+    }
+    
+    .company-info-card,
+    .company-map-card,
+    .company-lists-card,
+    .company-contacts-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .company-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .rating-value {
+        font-weight: bold;
+    }
+    
+    .reviews-count {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+    
+    .info-group {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .info-group.description {
+        margin-top: 1.5rem;
+    }
+    
+    .tag {
+        display: inline-block;
+        background-color: var(--background-alt);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 0.25rem;
+    }
+    
+    .map-placeholder {
+        background-color: var(--background-alt);
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+    }
+    
+    .map-coordinates {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .map-message {
+        font-style: italic;
+        opacity: 0.7;
+    }
+    
+    .lists-container,
+    .contacts-container {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .lists-container li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .lists-container li:last-child {
+        border-bottom: none;
+    }
+    
+    .list-count {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    .no-lists {
+        font-style: italic;
+        opacity: 0.7;
+    }
+    
+    .contact-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .contact-name {
+        font-weight: bold;
+    }
+    
+    .contact-position {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}
