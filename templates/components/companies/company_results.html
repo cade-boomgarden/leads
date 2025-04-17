@@ -1,0 +1,126 @@
+<!-- Partial template for company results to be loaded via HTMX -->
+<h2>Companies ({{ companies.paginator.count }})</h2>
+
+{% if company_lists %}
+<div class="list-actions">
+    <div class="save-to-list-form">
+        <form method="post" action="{% url 'company_list_add_from_filter' %}" class="save-to-list-form">
+            {% csrf_token %}
+            <input type="hidden" name="filter_params" value="{{ request.GET.urlencode }}">
+            <input type="hidden" name="page_number" value="{{ companies.number }}">
+            
+            <select name="company_list_id" class="form-control">
+                <option value="">Select a company list</option>
+                {% for list in company_lists %}
+                <option value="{{ list.id }}">{{ list.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <div class="save-buttons">
+                <button type="submit" name="save_type" value="page" class="btn btn-sm">
+                    <i class="ph ph-file-text"></i> Add Page to List
+                </button>
+                <button type="submit" name="save_type" value="all" class="btn btn-sm">
+                    <i class="ph ph-files"></i> Add All to List ({{ companies.paginator.count }})
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if companies %}
+<div class="table-container">
+    <table class="company-table">
+        <thead>
+            <tr>
+                <th>Company Name</th>
+                <th>Type</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Website</th>
+                <th>Contacts</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in companies %}
+            <tr>
+                <td>
+                    <a href="{% url 'company_detail' company.id %}">{{ company.name }}</a>
+                </td>
+                <td>{{ company.primary_type|default:"-" }}</td>
+                <td>{{ company.city|default:"-" }}</td>
+                <td>{{ company.state_code|default:"-" }}</td>
+                <td>
+                    {% if company.website_url %}
+                    <a href="{{ company.website_url }}" target="_blank" class="website-link">
+                        {{ company.domain }}
+                    </a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ company.contacts.count }}</td>
+                <td class="actions-cell">
+                    <a href="{% url 'company_detail' company.id %}" class="btn btn-sm" title="View Details">
+                        <i class="ph ph-info"></i>
+                    </a>
+                    <a href="{% url 'company_update' company.id %}" class="btn btn-sm" title="Edit">
+                        <i class="ph ph-pencil"></i>
+                    </a>
+                    <a href="{% url 'company_delete' company.id %}" class="btn btn-sm btn-danger" title="Delete">
+                        <i class="ph ph-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if companies.has_other_pages %}
+<div class="pagination">
+    <span class="pagination-info">
+        Page {{ companies.number }} of {{ companies.paginator.num_pages }}
+    </span>
+    
+    <div class="pagination-controls">
+        {% if companies.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="btn btn-sm">
+            <i class="ph ph-caret-double-left"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ companies.previous_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-left"></i>
+        </a>
+        {% endif %}
+        
+        {% for num in companies.paginator.page_range %}
+            {% if companies.number == num %}
+            <span class="current-page">{{ num }}</span>
+            {% elif num > companies.number|add:'-3' and num < companies.number|add:'3' %}
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" class="btn btn-sm">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if companies.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ companies.next_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-right"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ companies.paginator.num_pages }}" class="btn btn-sm">
+            <i class="ph ph-caret-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="ph ph-building"></i>
+    <p>No companies found matching your criteria.</p>
+    {% if request.GET %}
+    <a href="{% url 'company_list' %}" class="btn">Clear Filters</a>
+    {% endif %}
+</div>
+{% endif %}

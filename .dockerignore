@@ -42,3 +42,6 @@ htmlcov/
 # Node/npm
 node_modules/
 npm-debug.log
+
+# Venv
+venv/

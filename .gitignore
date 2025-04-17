@@ -46,3 +46,6 @@ Thumbs.db
 # Node/npm (if applicable)
 node_modules/
 npm-debug.log
+
+# Venv
+venv/
