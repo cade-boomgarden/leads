@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+*.sqlite
+*.env
+.env.*
+local_settings.py
+
+# Django static/media
+/static
+/staticfiles
+/media
+
+# Coverage reports
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Testing
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# VSCode / PyCharm / other editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node/npm (if applicable)
+node_modules/
+npm-debug.log

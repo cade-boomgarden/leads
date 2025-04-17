@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CRM{% endblock %}</title>
+    
+    <!-- Water CSS (Auto Theme) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
+    
+    <!-- Custom primary color -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Yantramanav:wght@100;300;400;500;700;900&display=swap');
+
+        :root {
+            --links: #0085CA;
+            --button-base: #0085CA;
+            --focus: rgba(0, 133, 202, 0.5);
+            --links-hover: #006BA2;
+            --button-hover: #006BA2;
+            --font-family: 'Yantramanav', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+        }
+        
+        
+        /* Custom navbar styles */
+        .navbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            text-decoration: none;
+            margin-right: 2rem;
+        }
+        
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .navbar-nav li {
+            margin-right: 1.5rem;
+        }
+        
+        .navbar-nav li:last-child {
+            margin-right: 0;
+        }
+        
+        .navbar-nav a {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-nav a i {
+            margin-right: 0.3rem;
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem 0;
+            min-width: 10rem;
+            z-index: 1000;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(0, 133, 202, 0.15);
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .navbar-brand {
+                margin-bottom: 1rem;
+            }
+            
+            .navbar-nav {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .navbar-nav li {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+            
+            .dropdown-menu {
+                position: static;
+                box-shadow: none;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Additional CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Additional head content -->
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Include navbar component -->
+    {% include 'components/navbar.html' %}
+    
+    <main>
+        {% block content %}
+        <!-- Main content will go here -->
+        {% endblock %}
+    </main>
+    
+    <footer>
+        <p>&copy; {% now "Y" %}</p>
+    </footer>
+    
+    <!-- Additional scripts -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

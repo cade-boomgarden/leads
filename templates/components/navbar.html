@@ -1,0 +1,53 @@
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <i class="ph ph-database"></i>
+        <span>CRM</span>
+    </a>
+    
+    <ul class="navbar-nav">
+        <li>
+            <a href="#" class="active">
+                <i class="ph ph-briefcase"></i>
+                <span>Companies</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <i class="ph ph-users"></i>
+                <span>Contacts</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <i class="ph ph-currency-dollar"></i>
+                <span>Deals</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'search_list' %}">
+                <i class="ph ph-magnifying-glass"></i>
+                <span>Finder</span>
+            </a>
+        </li>
+        <li class="dropdown">
+            <a href="#">
+                <i class="ph ph-user"></i>
+                <span>Account</span>
+            </a>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item">
+                    <i class="ph ph-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="dropdown-item">
+                    <i class="ph ph-question"></i>
+                    <span>Help</span>
+                </a>
+                <a href="#" class="dropdown-item">
+                    <i class="ph ph-sign-out"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </li>
+    </ul>
+</nav>
