@@ -1,13 +1,18 @@
-<!-- templates/pages/finder/search_list.html -->
+<!-- templates/pages/finder/contact_search_list.html -->
 {% extends 'base.html' %}
 
-{% block title %}Company Searches{% endblock %}
+{% block title %}Contact Searches{% endblock %}
 
 {% block content %}
-<h1>Company Searches</h1>
-<p class="mb-4">View all company searches and their results</p>
+<h1>Contact Searches</h1>
+<p class="mb-4">View all contact searches and their results</p>
 
-<a href="{% url 'serpapi_search' %}" class="btn mb-4">New SerpAPI Search</a>
+<div class="action-buttons">
+    <a href="{% url 'webscrape_search' %}" class="btn mb-4">
+        <i class="ph ph-globe"></i> New Web Scrape Search
+    </a>
+    <!-- Add buttons for other search types like Hunter or Apollo if implemented -->
+</div>
 
 <table>
     <thead>
@@ -35,17 +40,18 @@
                 {% endif %}
             </td>
             <td>
-                <a href="{% url 'search_detail' search.id %}">View Details</a>
+                <a href="{% url 'contact_search_detail' search.id %}">View Details</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6">No searches yet. <a href="{% url 'serpapi_search' %}">Create a new search</a>.</td>
+            <td colspan="6">No searches yet. <a href="{% url 'webscrape_search' %}">Create a new search</a>.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endblock content %}
+
+{% endblock %}
 
 {% block extra_css %}
 <style>
