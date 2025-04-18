@@ -32,8 +32,22 @@
                 <h2>Contacts</h2>
                 <p>Keep track of your business contacts</p>
                 <div class="card-actions">
-                    <a href="#" class="btn">View All Contacts</a>
-                    <a href="#" class="btn btn-secondary">Manage Lists</a>
+                    <a href="{% url 'contact_list' %}" class="btn">View All Contacts</a>
+                    <a href="{% url 'contact_list_list' %}" class="btn btn-secondary">Manage Lists</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <i class="ph ph-users-three"></i>
+            </div>
+            <div class="card-content">
+                <h2>Cohorts</h2>
+                <p>Create targeted contact lists</p>
+                <div class="card-actions">
+                    <a href="{% url 'cohort_list' %}" class="btn">View All Cohorts</a>
+                    <a href="{% url 'cohort_create' %}" class="btn btn-secondary">Create Cohort</a>
                 </div>
             </div>
         </div>

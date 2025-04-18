@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Cohorts{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1><i class="ph ph-users-three"></i> Cohorts</h1>
+    <p>Targeted groups of contacts selected one per company</p>
+    
+    <div class="action-buttons">
+        <a href="{% url 'cohort_create' %}" class="btn">
+            <i class="ph ph-plus"></i> Create New Cohort
+        </a>
+        <a href="{% url 'contact_list_list' %}" class="btn btn-secondary">
+            <i class="ph ph-list"></i> View Contact Lists
+        </a>
+        <a href="{% url 'contact_list' %}" class="btn btn-secondary">
+            <i class="ph ph-users"></i> View All Contacts
+        </a>
+    </div>
+</div>
+
+<div class="info-box">
+    <div class="info-icon">
+        <i class="ph ph-info"></i>
+    </div>
+    <div class="info-content">
+        <h3>What are Cohorts?</h3>
+        <p>Cohorts are specialized contact lists that contain one contact from each company in a company list. 
+        They're perfect for creating targeted outreach campaigns where you want to reach the right person at each company.</p>
+        <p>Contacts are selected automatically based on criteria like email prefix, department, job title, or seniority level.</p>
+    </div>
+</div>
+
+<div class="cohorts-container">
+    {% if cohorts %}
+    <div class="cohorts-grid">
+        {% for cohort in cohorts %}
+        <div class="cohort-card">
+            <div class="cohort-card-header">
+                <h2>{{ cohort.name }}</h2>
+                <span class="contact-count">{{ cohort.contacts.count }} contacts</span>
+            </div>
+            
+            <div class="cohort-card-body">
+                {% if cohort.description %}
+                <p class="cohort-description">{{ cohort.description }}</p>
+                {% else %}
+                <p class="cohort-description empty">No description provided.</p>
+                {% endif %}
+                
+                <div class="cohort-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Company List:</div>
+                        <div class="detail-value">
+                            <a href="{% url 'company_list_detail' cohort.company_list.id %}">
+                                {{ cohort.company_list.name }}
+                            </a>
+                            ({{ cohort.company_list.companies.count }} companies)
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Selection Method:</div>
+                        <div class="detail-value">{{ cohort.get_selection_method_display }}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Last Generated:</div>
+                        <div class="detail-value">
+                            {% if cohort.last_generated %}
+                            {{ cohort.last_generated|date:"M d, Y H:i" }}
+                            {% else %}
+                            <em>Never</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cohort-card-footer">
+                <a href="{% url 'cohort_detail' cohort.id %}" class="btn btn-sm">View Cohort</a>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle">
+                        <i class="ph ph-dots-three"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'cohort_update' cohort.id %}" class="dropdown-item">
+                            <i class="ph ph-pencil"></i> Edit
+                        </a>
+                        <a href="{% url 'cohort_export' cohort.id %}" class="dropdown-item">
+                            <i class="ph ph-file-csv"></i> Export to CSV
+                        </a>
+                        <a href="{% url 'cohort_delete' cohort.id %}" class="dropdown-item text-danger">
+                            <i class="ph ph-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="ph ph-users-three"></i>
+        <h2>No Cohorts Yet</h2>
+        <p>Create a cohort to generate targeted contact lists based on company lists.</p>
+        <a href="{% url 'cohort_create' %}" class="btn">
+            <i class="ph ph-plus"></i> Create Your First Cohort
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .info-box {
+        background-color: #e8f4fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .info-icon {
+        color: #2196f3;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .info-content h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .info-content p {
+        margin: 0.5rem 0;
+    }
+    
+    .cohorts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .cohort-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .cohort-card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .cohort-card-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .contact-count {
+        font-size: 0.8rem;
+        background-color: rgba(0, 0, 0, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 16px;
+    }
+    
+    .cohort-card-body {
+        padding: 1rem;
+        flex-grow: 1;
+    }
+    
+    .cohort-description {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    
+    .cohort-description.empty {
+        font-style: italic;
+        opacity: 0.7;
+    }
+    
+    .cohort-details {
+        margin-top: 1rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1rem;
+    }
+    
+    .detail-item {
+        margin-bottom: 0.75rem;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .detail-value {
+        font-size: 0.95rem;
+    }
+    
+    .cohort-card-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        bottom: 100%;
+        min-width: 160px;
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        margin-bottom: 0.5rem;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+        display: block;
+    }
+    
+    .dropdown-item {
+        display: block;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: var(--text);
+        transition: background-color 0.2s;
+    }
+    
+    .dropdown-item:hover {
+        background-color: var(--background-alt);
+    }
+    
+    .text-danger {
+        color: #e74c3c;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-state h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1.5rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+{% endblock %}

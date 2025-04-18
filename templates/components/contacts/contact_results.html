@@ -1,0 +1,124 @@
+<!-- Partial template for contact results to be loaded via HTMX -->
+<h2>Contacts ({{ contacts.paginator.count }})</h2>
+
+{% if contact_lists %}
+<div class="list-actions">
+    <div class="save-to-list-form">
+        <form method="post" action="{% url 'contact_list_add_from_filter' %}" class="save-to-list-form">
+            {% csrf_token %}
+            <input type="hidden" name="filter_params" value="{{ request.GET.urlencode }}">
+            <input type="hidden" name="page_number" value="{{ contacts.number }}">
+            
+            <select name="contact_list_id" class="form-control">
+                <option value="">Select a contact list</option>
+                {% for list in contact_lists %}
+                <option value="{{ list.id }}">{{ list.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <div class="save-buttons">
+                <button type="submit" name="save_type" value="page" class="btn btn-sm">
+                    <i class="ph ph-file-text"></i> Add Page to List
+                </button>
+                <button type="submit" name="save_type" value="all" class="btn btn-sm">
+                    <i class="ph ph-files"></i> Add All to List ({{ contacts.paginator.count }})
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if contacts %}
+<div class="table-container">
+    <table class="contact-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Position</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contact in contacts %}
+            <tr>
+                <td>
+                    <a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a>
+                </td>
+                <td>{{ contact.email }}</td>
+                <td>{{ contact.position|default:"-" }}</td>
+                <td>
+                    {% if contact.company %}
+                    <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                    {% else %}
+                    {{ contact.organization_name|default:"-" }}
+                    {% endif %}
+                </td>
+                <td>{{ contact.get_status_display }}</td>
+                <td>{{ contact.get_source_channel_display }}</td>
+                <td class="actions-cell">
+                    <a href="{% url 'contact_detail' contact.id %}" class="btn btn-sm" title="View Details">
+                        <i class="ph ph-info"></i>
+                    </a>
+                    <a href="{% url 'contact_update' contact.id %}" class="btn btn-sm" title="Edit">
+                        <i class="ph ph-pencil"></i>
+                    </a>
+                    <a href="{% url 'contact_delete' contact.id %}" class="btn btn-sm btn-danger" title="Delete">
+                        <i class="ph ph-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if contacts.has_other_pages %}
+<div class="pagination">
+    <span class="pagination-info">
+        Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}
+    </span>
+    
+    <div class="pagination-controls">
+        {% if contacts.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="btn btn-sm">
+            <i class="ph ph-caret-double-left"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ contacts.previous_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-left"></i>
+        </a>
+        {% endif %}
+        
+        {% for num in contacts.paginator.page_range %}
+            {% if contacts.number == num %}
+            <span class="current-page">{{ num }}</span>
+            {% elif num > contacts.number|add:'-3' and num < contacts.number|add:'3' %}
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" class="btn btn-sm">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if contacts.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ contacts.next_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-right"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ contacts.paginator.num_pages }}" class="btn btn-sm">
+            <i class="ph ph-caret-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="ph ph-user"></i>
+    <p>No contacts found matching your criteria.</p>
+    {% if request.GET %}
+    <a href="{% url 'contact_list' %}" class="btn">Clear Filters</a>
+    {% endif %}
+</div>
+{% endif %}

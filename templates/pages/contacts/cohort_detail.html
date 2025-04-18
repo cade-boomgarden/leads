@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cohort.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'cohort_list' %}">
+            <i class="ph ph-users-three"></i> Cohorts
+        </a>
+        <span class="divider">/</span>
+        <span>{{ cohort.name }}</span>
+    </div>
+    
+    <h1>{{ cohort.name }}</h1>
+    {% if cohort.description %}
+    <p class="cohort-description">{{ cohort.description }}</p>
+    {% endif %}
+    
+    <div class="cohort-meta">
+        <div class="meta-grid">
+            <div class="meta-group">
+                <div class="meta-label">Company List:</div>
+                <div class="meta-value">
+                    <a href="{% url 'company_list_detail' cohort.company_list.id %}">
+                        {{ cohort.company_list.name }}
+                    </a>
+                    ({{ cohort.company_list.companies.count }} companies)
+                </div>
+            </div>
+            
+            <div class="meta-group">
+                <div class="meta-label">Selection Method:</div>
+                <div class="meta-value">{{ cohort.get_selection_method_display }}</div>
+            </div>
+            
+            <div class="meta-group">
+                <div class="meta-label">Selected Contacts:</div>
+                <div class="meta-value">{{ contacts.paginator.count }} of {{ cohort.company_list.companies.count }} companies</div>
+            </div>
+            
+            <div class="meta-group">
+                <div class="meta-label">Last Generated:</div>
+                <div class="meta-value">
+                    {% if cohort.last_generated %}
+                    {{ cohort.last_generated|date:"M d, Y H:i" }}
+                    {% else %}
+                    <em>Never</em>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if cohort.selection_method == 'email_prefix' and cohort.email_prefix_hierarchy %}
+        <div class="selection-details">
+            <div class="selection-label">Email Prefix Hierarchy:</div>
+            <div class="selection-value">
+                {% for prefix in cohort.email_prefix_hierarchy %}
+                <span class="badge">{{ prefix }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif cohort.selection_method == 'department' and cohort.target_department %}
+        <div class="selection-details">
+            <div class="selection-label">Target Department:</div>
+            <div class="selection-value">{{ cohort.target_department }}</div>
+        </div>
+        {% elif cohort.selection_method == 'seniority' %}
+        <div class="selection-details">
+            <div class="selection-label">Minimum Seniority Level:</div>
+            <div class="selection-value">{{ cohort.minimum_seniority }}/10</div>
+        </div>
+        {% elif cohort.selection_method == 'job_title' and cohort.job_title_keywords %}
+        <div class="selection-details">
+            <div class="selection-label">Job Title Keywords:</div>
+            <div class="selection-value">
+                {% for keyword in cohort.job_title_keywords %}
+                <span class="badge">{{ keyword }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'cohort_update' cohort.id %}" class="btn">
+            <i class="ph ph-pencil"></i> Edit Cohort
+        </a>
+        <a href="{% url 'cohort_export' cohort.id %}" class="btn">
+            <i class="ph ph-file-csv"></i> Export to CSV
+        </a>
+        <form method="post" class="regenerate-form">
+            {% csrf_token %}
+            <input type="hidden" name="regenerate" value="true">
+            <button type="submit" class="btn">
+                <i class="ph ph-arrows-clockwise"></i> Regenerate Contacts
+            </button>
+        </form>
+        <a href="{% url 'cohort_delete' cohort.id %}" class="btn btn-danger">
+            <i class="ph ph-trash"></i> Delete Cohort
+        </a>
+    </div>
+</div>
+
+<div class="contacts-section">
+    <h2>Selected Contacts</h2>
+    
+    {% if contacts %}
+    <div class="table-container">
+        <table class="contact-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Position</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td>
+                        <a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a>
+                    </td>
+                    <td>{{ contact.email }}</td>
+                    <td>{{ contact.position|default:"-" }}</td>
+                    <td>
+                        {% if contact.company %}
+                        <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                        {% else %}
+                        {{ contact.organization_name|default:"-" }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ contact.status }}">{{ contact.get_status_display }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'contact_detail' contact.id %}" class="btn btn-sm">
+                            <i class="ph ph-info"></i> Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if contacts.has_other_pages %}
+    <div class="pagination">
+        <span class="pagination-info">
+            Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}
+        </span>
+        
+        <div class="pagination-controls">
+            {% if contacts.has_previous %}
+            <a href="?page=1" class="btn btn-sm">
+                <i class="ph ph-caret-double-left"></i>
+            </a>
+            <a href="?page={{ contacts.previous_page_number }}" class="btn btn-sm">
+                <i class="ph ph-caret-left"></i>
+            </a>
+            {% endif %}
+            
+            {% for num in contacts.paginator.page_range %}
+                {% if contacts.number == num %}
+                <span class="current-page">{{ num }}</span>
+                {% elif num > contacts.number|add:'-3' and num < contacts.number|add:'3' %}
+                <a href="?page={{ num }}" class="btn btn-sm">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if contacts.has_next %}
+            <a href="?page={{ contacts.next_page_number }}" class="btn btn-sm">
+                <i class="ph ph-caret-right"></i>
+            </a>
+            <a href="?page={{ contacts.paginator.num_pages }}" class="btn btn-sm">
+                <i class="ph ph-caret-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="ph ph-users-three"></i>
+        <p>No contacts have been generated for this cohort yet.</p>
+        <form method="post" class="regenerate-form">
+            {% csrf_token %}
+            <input type="hidden" name="regenerate" value="true">
+            <button type="submit" class="btn">
+                <i class="ph ph-arrows-clockwise"></i> Generate Contacts Now
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .cohort-description {
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        max-width: 800px;
+    }
+    
+    .cohort-meta {
+        background-color: var(--background-alt);
+        padding: 1.25rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+    }
+    
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .meta-group {
+        margin-bottom: 0.5rem;
+    }
+    
+    .meta-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .selection-details {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .selection-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        background-color: rgba(0, 0, 0, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 16px;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .regenerate-form {
+        display: inline;
+    }
+    
+    .contacts-section {
+        margin-top: 2rem;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .contact-table th,
+    .contact-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .contact-table th {
+        background-color: var(--background-alt);
+        font-weight: bold;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    .status-new {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-sent {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-replied {
+        background-color: #f9fbe7;
+        color: #afb42b;
+    }
+    
+    .status-unsubscribed {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .pagination {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .current-page {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+        background-color: var(--links);
+        color: white;
+        border-radius: 4px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}

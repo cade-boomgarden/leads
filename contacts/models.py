@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Q
 
 class ContactList(models.Model):
     name = models.CharField(max_length=255)
@@ -287,3 +288,219 @@ class Contact(models.Model):
                     self.zerobounce_processed_at = None
         
         self.save()
+
+class Cohort(models.Model):
+    """
+    A cohort is a specialized contact list containing one contact from each company 
+    in a company list, selected based on specific criteria.
+    """
+    class ContactSelectionMethod(models.TextChoices):
+        EMAIL_PREFIX = 'email_prefix', 'Email Prefix Hierarchy'
+        DEPARTMENT = 'department', 'By Department'
+        SENIORITY = 'seniority', 'By Seniority Level'
+        JOB_TITLE = 'job_title', 'By Job Title'
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    company_list = models.ForeignKey(
+        'companies.CompanyList', 
+        on_delete=models.CASCADE,
+        related_name='cohorts'
+    )
+    selection_method = models.CharField(
+        max_length=20,
+        choices=ContactSelectionMethod.choices,
+        default=ContactSelectionMethod.EMAIL_PREFIX
+    )
+    
+    # Fields for email prefix hierarchy
+    email_prefix_hierarchy = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of email prefixes to try, in order of preference (e.g., ['sales', 'info', 'contact'])"
+    )
+    
+    # Fields for department selection
+    target_department = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Target department name to select contacts from"
+    )
+    
+    # Fields for seniority selection
+    minimum_seniority = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(10)],
+        help_text="Minimum seniority level (0-10, where 10 is highest)"
+    )
+    
+    # Fields for job title selection
+    job_title_keywords = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of job title keywords to match, in order of preference"
+    )
+    
+    # Generated contacts list
+    contacts = models.ManyToManyField(
+        'contacts.Contact',
+        blank=True,
+        related_name='cohorts'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_generated = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+    
+    def generate_contacts(self):
+        """
+        Generate the cohort by selecting one contact from each company in the company list
+        based on the selected method.
+        
+        Returns:
+            int: Number of contacts added to the cohort
+        """
+        # Get all companies from the company list
+        companies = self.company_list.companies.all()
+        
+        # Clear existing contacts
+        self.contacts.clear()
+        
+        # Counter for added contacts
+        added_count = 0
+        
+        # Process each company
+        for company in companies:
+            # Get all contacts for this company
+            company_contacts = company.contacts.all()
+            
+            if not company_contacts:
+                continue  # Skip companies with no contacts
+            
+            # Select contact based on the method
+            selected_contact = None
+            
+            if self.selection_method == self.ContactSelectionMethod.EMAIL_PREFIX:
+                selected_contact = self._select_by_email_prefix(company_contacts)
+            elif self.selection_method == self.ContactSelectionMethod.DEPARTMENT:
+                selected_contact = self._select_by_department(company_contacts)
+            elif self.selection_method == self.ContactSelectionMethod.SENIORITY:
+                selected_contact = self._select_by_seniority(company_contacts)
+            elif self.selection_method == self.ContactSelectionMethod.JOB_TITLE:
+                selected_contact = self._select_by_job_title(company_contacts)
+            
+            # Add the selected contact to the cohort
+            if selected_contact:
+                self.contacts.add(selected_contact)
+                added_count += 1
+        
+        # Update last generated timestamp
+        from django.utils import timezone
+        self.last_generated = timezone.now()
+        self.save()
+        
+        return added_count
+    
+    def _select_by_email_prefix(self, contacts):
+        """
+        Select a contact based on email prefix hierarchy.
+        """
+        # Use default hierarchy if none specified
+        hierarchy = self.email_prefix_hierarchy
+        if not hierarchy:
+            hierarchy = ['sales', 'info', 'contact', 'hello', 'support', 'general', 'admin']
+        
+        # Try each prefix in order
+        for prefix in hierarchy:
+            for contact in contacts:
+                username = contact.email.split('@')[0].lower()
+                if username.startswith(prefix):
+                    return contact
+        
+        # If no match, return the first contact
+        return contacts.first()
+    
+    def _select_by_department(self, contacts):
+        """
+        Select a contact based on department.
+        """
+        if not self.target_department:
+            return contacts.first()
+        
+        # Try to find a contact in the target department
+        department_contacts = contacts.filter(
+            Q(hunter_department__icontains=self.target_department) |
+            Q(position__icontains=self.target_department)
+        )
+        
+        if department_contacts.exists():
+            return department_contacts.first()
+        
+        # If no match, return the first contact
+        return contacts.first()
+    
+    def _select_by_seniority(self, contacts):
+        """
+        Select a contact based on seniority.
+        """
+        # Define seniority keywords with scores
+        seniority_scores = {
+            'ceo': 10, 'chief': 9, 'president': 9, 'founder': 9, 'owner': 9,
+            'director': 8, 'vp': 8, 'vice president': 8, 'head': 7,
+            'senior': 6, 'manager': 5, 'lead': 5,
+            'associate': 3, 'assistant': 2, 'junior': 1
+        }
+        
+        # Score each contact
+        scored_contacts = []
+        for contact in contacts:
+            score = 0
+            
+            # Check hunter_seniority field
+            if contact.hunter_seniority:
+                if contact.hunter_seniority.lower() in seniority_scores:
+                    score = seniority_scores[contact.hunter_seniority.lower()]
+            
+            # Check position/title
+            if contact.position:
+                position_lower = contact.position.lower()
+                for keyword, keyword_score in seniority_scores.items():
+                    if keyword in position_lower:
+                        score = max(score, keyword_score)
+            
+            scored_contacts.append((contact, score))
+        
+        # Filter by minimum seniority
+        qualifying_contacts = [(contact, score) for contact, score in scored_contacts 
+                              if score >= self.minimum_seniority]
+        
+        if qualifying_contacts:
+            # Sort by score (highest first)
+            qualifying_contacts.sort(key=lambda x: x[1], reverse=True)
+            return qualifying_contacts[0][0]
+        
+        # If no qualifying contacts, return the first contact
+        return contacts.first()
+    
+    def _select_by_job_title(self, contacts):
+        """
+        Select a contact based on job title keywords.
+        """
+        # Use default keywords if none specified
+        keywords = self.job_title_keywords
+        if not keywords:
+            keywords = ['sales', 'marketing', 'business development', 'account manager']
+        
+        # Try each keyword in order
+        for keyword in keywords:
+            matching_contacts = contacts.filter(position__icontains=keyword)
+            if matching_contacts.exists():
+                return matching_contacts.first()
+        
+        # If no match, return the first contact
+        return contacts.first()

@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ contact_list.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'contact_list_list' %}">
+            <i class="ph ph-list-bullets"></i> Contact Lists
+        </a>
+        <span class="divider">/</span>
+        <span>{{ contact_list.name }}</span>
+    </div>
+    
+    <h1>{{ contact_list.name }}</h1>
+    {% if contact_list.description %}
+    <p class="list-description">{{ contact_list.description }}</p>
+    {% endif %}
+    
+    <div class="list-meta">
+        <div class="meta-item">
+            <i class="ph ph-users"></i>
+            <span>{{ contacts.paginator.count }} contacts</span>
+        </div>
+        
+        <div class="meta-item">
+            <i class="ph ph-clock"></i>
+            <span>Created: {{ contact_list.created_at|date:"M d, Y" }}</span>
+        </div>
+        
+        <div class="meta-item">
+            <i class="ph ph-arrows-clockwise"></i>
+            <span>Updated: {{ contact_list.updated_at|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'contact_list_update' contact_list.id %}" class="btn">
+            <i class="ph ph-pencil"></i> Edit List
+        </a>
+        <a href="{% url 'contact_list_add_contacts' contact_list.id %}" class="btn">
+            <i class="ph ph-plus"></i> Add Contacts
+        </a>
+        <a href="{% url 'contact_list_export' contact_list.id %}" class="btn">
+            <i class="ph ph-file-csv"></i> Export to CSV
+        </a>
+        <a href="{% url 'contact_list_delete' contact_list.id %}" class="btn btn-danger">
+            <i class="ph ph-trash"></i> Delete List
+        </a>
+    </div>
+</div>
+
+{% if searches %}
+<div class="add-from-search-section">
+    <h2>Add Contacts from Search Results</h2>
+    <div class="search-results-container">
+        {% for search in searches %}
+        <div class="search-result-item">
+            <div class="search-result-info">
+                <div class="search-id">Search #{{ search.id }}</div>
+                <div class="search-meta">
+                    <span class="search-date">{{ search.created_at|date:"M d, Y" }}</span>
+                    <span class="search-count">{{ search.results_count }} contacts</span>
+                </div>
+                {% if search.webscrape_parameters %}
+                <div class="search-query">
+                    <strong>Source:</strong> Web Scrape
+                    {% if search.webscrape_parameters.target_url %}
+                    of {{ search.webscrape_parameters.target_url }}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <a href="{% url 'contact_list_add_search_results' contact_list.id search.id %}" class="btn btn-sm">
+                <i class="ph ph-plus"></i> Add All
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="contacts-section">
+    <h2>Contacts in this List</h2>
+    
+    {% if contacts %}
+    <div class="contact-grid">
+        {% for contact in contacts %}
+        <div class="contact-card">
+            <div class="contact-card-header">
+                <h3>{{ contact.first_name }} {{ contact.last_name }}</h3>
+                <span class="status-badge status-{{ contact.status }}">{{ contact.get_status_display }}</span>
+            </div>
+            
+            <div class="contact-card-body">
+                <div class="contact-info">
+                    <i class="ph ph-envelope"></i>
+                    <span>{{ contact.email }}</span>
+                </div>
+                
+                {% if contact.position %}
+                <div class="contact-info">
+                    <i class="ph ph-briefcase"></i>
+                    <span>{{ contact.position }}</span>
+                </div>
+                {% endif %}
+                
+                {% if contact.company %}
+                <div class="contact-info">
+                    <i class="ph ph-buildings"></i>
+                    <span>
+                        <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                    </span>
+                </div>
+                {% elif contact.organization_name %}
+                <div class="contact-info">
+                    <i class="ph ph-buildings"></i>
+                    <span>{{ contact.organization_name }}</span>
+                </div>
+                {% endif %}
+                
+                {% if contact.phone_number %}
+                <div class="contact-info">
+                    <i class="ph ph-phone"></i>
+                    <span>{{ contact.phone_number }}</span>
+                </div>
+                {% endif %}
+                
+                {% if contact.linkedin_url %}
+                <div class="contact-info">
+                    <i class="ph ph-linkedin-logo"></i>
+                    <a href="{{ contact.linkedin_url }}" target="_blank">LinkedIn Profile</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="contact-card-footer">
+                <a href="{% url 'contact_detail' contact.id %}" class="btn btn-sm">View Details</a>
+                <form method="post" action="{% url 'contact_list_remove_contact' contact_list.id contact.id %}" class="remove-form" onsubmit="return confirm('Remove {{ contact.first_name }} {{ contact.last_name }} from this list?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="ph ph-x"></i> Remove
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if contacts.has_other_pages %}
+    <div class="pagination">
+        <span class="pagination-info">
+            Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}
+        </span>
+        
+        <div class="pagination-controls">
+            {% if contacts.has_previous %}
+            <a href="?page=1" class="btn btn-sm">
+                <i class="ph ph-caret-double-left"></i>
+            </a>
+            <a href="?page={{ contacts.previous_page_number }}" class="btn btn-sm">
+                <i class="ph ph-caret-left"></i>
+            </a>
+            {% endif %}
+            
+            {% for num in contacts.paginator.page_range %}
+                {% if contacts.number == num %}
+                <span class="current-page">{{ num }}</span>
+                {% elif num > contacts.number|add:'-3' and num < contacts.number|add:'3' %}
+                <a href="?page={{ num }}" class="btn btn-sm">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if contacts.has_next %}
+            <a href="?page={{ contacts.next_page_number }}" class="btn btn-sm">
+                <i class="ph ph-caret-right"></i>
+            </a>
+            <a href="?page={{ contacts.paginator.num_pages }}" class="btn btn-sm">
+                <i class="ph ph-caret-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="ph ph-user"></i>
+        <p>This list doesn't have any contacts yet.</p>
+        <div class="empty-actions">
+            <a href="{% url 'contact_list_add_contacts' contact_list.id %}" class="btn">
+                <i class="ph ph-plus"></i> Add Contacts
+            </a>
+            {% if searches %}
+            <a href="#add-from-search" class="btn btn-secondary">
+                <i class="ph ph-magnifying-glass"></i> Add from Search Results
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .list-description {
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        max-width: 800px;
+    }
+    
+    .list-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .add-from-search-section {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .add-from-search-section h2 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    .search-results-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .search-result-item {
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .search-id {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .search-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .search-query {
+        font-size: 0.9rem;
+    }
+    
+    .contacts-section {
+        margin-top: 2rem;
+    }
+    
+    .contacts-section h2 {
+        margin-bottom: 1rem;
+    }
+    
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .contact-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .contact-card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .contact-card-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    .status-new {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-sent {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-replied {
+        background-color: #f9fbe7;
+        color: #afb42b;
+    }
+    
+    .status-unsubscribed {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .contact-card-body {
+        padding: 1rem;
+        flex-grow: 1;
+    }
+    
+    .contact-info {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .contact-info i {
+        flex-shrink: 0;
+        margin-top: 0.2rem;
+    }
+    
+    .contact-card-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-actions {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .pagination {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .current-page {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+        background-color: var(--links);
+        color: white;
+        border-radius: 4px;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+    
+    .remove-form {
+        display: inline;
+    }
+</style>
+{% endblock %}

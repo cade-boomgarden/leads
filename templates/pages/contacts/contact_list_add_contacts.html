@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Contacts to {{ contact_list.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'contact_list_list' %}">
+            <i class="ph ph-list-bullets"></i> Contact Lists
+        </a>
+        <span class="divider">/</span>
+        <a href="{% url 'contact_list_detail' contact_list.id %}">{{ contact_list.name }}</a>
+        <span class="divider">/</span>
+        <span>Add Contacts</span>
+    </div>
+    
+    <h1>Add Contacts to "{{ contact_list.name }}"</h1>
+</div>
+
+<div class="form-container">
+    <form method="post" id="add-contacts-form">
+        {% csrf_token %}
+        
+        {% if form.contacts.queryset.count > 0 %}
+        <p class="form-instruction">
+            Select the contacts you want to add to this list. You can select multiple contacts.
+        </p>
+        
+        <div class="filter-controls">
+            <input type="text" id="contact-filter" placeholder="Filter contacts..." class="filter-input">
+            <div class="filter-actions">
+                <button type="button" id="select-all" class="btn btn-sm">Select All</button>
+                <button type="button" id="deselect-all" class="btn btn-sm btn-secondary">Deselect All</button>
+            </div>
+        </div>
+        
+        <div class="contacts-selection">
+            {% for contact in form.contacts.queryset %}
+            <div class="contact-checkbox-item">
+                <label class="contact-checkbox-label">
+                    <input type="checkbox" name="contacts" value="{{ contact.id }}" class="contact-checkbox">
+                    <div class="contact-info">
+                        <div class="contact-name">{{ contact.first_name }} {{ contact.last_name }}</div>
+                        <div class="contact-email">{{ contact.email }}</div>
+                        <div class="contact-details">
+                            {% if contact.position %}{{ contact.position }}{% endif %}
+                            {% if contact.position and contact.company %} at {% endif %}
+                            {% if contact.company %}{{ contact.company.name }}{% elif contact.organization_name %}{{ contact.organization_name }}{% endif %}
+                        </div>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn">Add Selected Contacts</button>
+            <a href="{% url 'contact_list_detail' contact_list.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="ph ph-users"></i>
+            <p>There are no contacts available to add to this list.</p>
+            <div class="empty-actions">
+                <a href="{% url 'contact_create' %}" class="btn">
+                    <i class="ph ph-plus"></i> Create New Contact
+                </a>
+                <a href="{% url 'contact_list_detail' contact_list.id %}" class="btn btn-secondary">
+                    <i class="ph ph-arrow-left"></i> Go Back to List
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const filterInput = document.getElementById('contact-filter');
+        const contactItems = document.querySelectorAll('.contact-checkbox-item');
+        
+        filterInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            contactItems.forEach(item => {
+                const contactName = item.querySelector('.contact-name').textContent.toLowerCase();
+                const contactEmail = item.querySelector('.contact-email').textContent.toLowerCase();
+                const contactDetails = item.querySelector('.contact-details') ? 
+                                     item.querySelector('.contact-details').textContent.toLowerCase() : '';
+                
+                // Show the item if any of its content matches the search term
+                if (contactName.includes(searchTerm) || 
+                    contactEmail.includes(searchTerm) || 
+                    contactDetails.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Select/Deselect all functionality
+        const selectAllBtn = document.getElementById('select-all');
+        const deselectAllBtn = document.getElementById('deselect-all');
+        const checkboxes = document.querySelectorAll('.contact-checkbox');
+        
+        selectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                // Only select visible items
+                if (checkbox.closest('.contact-checkbox-item').style.display !== 'none') {
+                    checkbox.checked = true;
+                }
+            });
+        });
+        
+        deselectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .form-container {
+        margin-top: 1.5rem;
+    }
+    
+    .form-instruction {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
+    
+    .filter-input {
+        flex-grow: 1;
+        max-width: 300px;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .contacts-selection {
+        max-height: 500px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-checkbox-item {
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .contact-checkbox-item:last-child {
+        border-bottom: none;
+    }
+    
+    .contact-checkbox-label {
+        display: flex;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    
+    .contact-checkbox-label:hover {
+        background-color: var(--background-alt);
+    }
+    
+    .contact-info {
+        flex-grow: 1;
+    }
+    
+    .contact-name {
+        font-weight: bold;
+    }
+    
+    .contact-email {
+        color: var(--links);
+        margin-top: 0.25rem;
+    }
+    
+    .contact-details {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+    
+    .form-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

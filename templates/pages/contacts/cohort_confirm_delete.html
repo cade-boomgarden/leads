@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ cohort.name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'cohort_list' %}">
+            <i class="ph ph-users-three"></i> Cohorts
+        </a>
+        <span class="divider">/</span>
+        <a href="{% url 'cohort_detail' cohort.id %}">{{ cohort.name }}</a>
+        <span class="divider">/</span>
+        <span>Delete</span>
+    </div>
+    
+    <h1>Delete Cohort</h1>
+</div>
+
+<div class="delete-container">
+    <div class="delete-warning">
+        <div class="warning-icon">
+            <i class="ph ph-warning"></i>
+        </div>
+        
+        <div class="warning-text">
+            <h2>Are you sure you want to delete this cohort?</h2>
+            <p>You are about to delete <strong>{{ cohort.name }}</strong>. This action cannot be undone.</p>
+            
+            <div class="cohort-summary">
+                {% if cohort.description %}
+                <p><strong>Description:</strong> {{ cohort.description }}</p>
+                {% endif %}
+                <p><strong>Company List:</strong> {{ cohort.company_list.name }}</p>
+                <p><strong>Selection Method:</strong> {{ cohort.get_selection_method_display }}</p>
+                <p><strong>Selected Contacts:</strong> {{ cohort.contacts.count }}</p>
+                <p><strong>Created:</strong> {{ cohort.created_at|date:"M d, Y" }}</p>
+            </div>
+            
+            <div class="delete-note">
+                <i class="ph ph-info"></i>
+                <span>Note: Deleting this cohort will only remove the cohort itself, not the contacts or companies.</span>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="delete-actions">
+            <button type="submit" class="btn btn-danger">Yes, Delete This Cohort</button>
+            <a href="{% url 'cohort_detail' cohort.id %}" class="btn btn-secondary">No, Go Back</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .delete-container {
+        margin-top: 1.5rem;
+    }
+    
+    .delete-warning {
+        display: flex;
+        gap: 1.5rem;
+        background-color: #fff3e0;
+        border: 1px solid #ffe0b2;
+        border-radius: 4px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .warning-icon {
+        font-size: 2.5rem;
+        color: #f57c00;
+        flex-shrink: 0;
+    }
+    
+    .warning-text h2 {
+        margin-top: 0;
+        color: #e65100;
+        font-size: 1.2rem;
+    }
+    
+    .cohort-summary {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .cohort-summary p {
+        margin: 0.5rem 0;
+    }
+    
+    .delete-note {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-style: italic;
+    }
+    
+    .delete-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}

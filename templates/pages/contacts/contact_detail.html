@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ contact.first_name }} {{ contact.last_name }}{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'contact_list' %}">
+            <i class="ph ph-users"></i> Contacts
+        </a>
+        <span class="divider">/</span>
+        <span>{{ contact.first_name }} {{ contact.last_name }}</span>
+    </div>
+    
+    <h1>{{ contact.first_name }} {{ contact.last_name }}</h1>
+    
+    <div class="action-buttons">
+        <a href="{% url 'contact_update' contact.id %}" class="btn">
+            <i class="ph ph-pencil"></i> Edit
+        </a>
+        <a href="{% url 'contact_delete' contact.id %}" class="btn btn-danger">
+            <i class="ph ph-trash"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="contact-detail-container">
+    <div class="contact-info-card">
+        <div class="card-header">
+            <h2>Contact Information</h2>
+        </div>
+        
+        <div class="card-body">
+            <div class="info-group">
+                <div class="info-label">Email:</div>
+                <div class="info-value">{{ contact.email }}</div>
+            </div>
+            
+            {% if contact.position %}
+            <div class="info-group">
+                <div class="info-label">Position:</div>
+                <div class="info-value">{{ contact.position }}</div>
+            </div>
+            {% endif %}
+            
+            {% if contact.phone_number %}
+            <div class="info-group">
+                <div class="info-label">Phone:</div>
+                <div class="info-value">{{ contact.phone_number }}</div>
+            </div>
+            {% endif %}
+            
+            <div class="info-group">
+                <div class="info-label">Company:</div>
+                <div class="info-value">
+                    {% if contact.company %}
+                    <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                    {% elif contact.organization_name %}
+                    {{ contact.organization_name }}
+                    {% else %}
+                    <em>Not specified</em>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Status:</div>
+                <div class="info-value">
+                    <span class="status-badge status-{{ contact.status }}">{{ contact.get_status_display }}</span>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Source:</div>
+                <div class="info-value">{{ contact.get_source_channel_display }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="contact-social-card">
+        <div class="card-header">
+            <h2>Social Profiles</h2>
+        </div>
+        <div class="card-body">
+            {% if contact.linkedin_url or contact.twitter %}
+            <ul class="social-links">
+                {% if contact.linkedin_url %}
+                <li>
+                    <a href="{{ contact.linkedin_url }}" target="_blank" class="social-link">
+                        <i class="ph ph-linkedin-logo"></i>
+                        <span>LinkedIn Profile</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% if contact.twitter %}
+                <li>
+                    <a href="https://twitter.com/{{ contact.twitter }}" target="_blank" class="social-link">
+                        <i class="ph ph-twitter-logo"></i>
+                        <span>@{{ contact.twitter }}</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            {% else %}
+            <p class="no-social">No social profiles available.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="contact-lists-card">
+        <div class="card-header">
+            <h2>Contact Lists</h2>
+        </div>
+        <div class="card-body">
+            {% if contact_lists %}
+            <ul class="lists-container">
+                {% for list in contact_lists %}
+                <li>
+                    <a href="{% url 'contact_list_detail' list.id %}">{{ list.name }}</a>
+                    <span class="list-count">{{ list.contacts.count }} contacts</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-lists">This contact is not in any lists yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="contact-metadata-card">
+        <div class="card-header">
+            <h2>Additional Information</h2>
+        </div>
+        <div class="card-body">
+            <div class="info-group">
+                <div class="info-label">Created:</div>
+                <div class="info-value">{{ contact.created_at|date:"M d, Y H:i" }}</div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Last Updated:</div>
+                <div class="info-value">{{ contact.updated_at|date:"M d, Y H:i" }}</div>
+            </div>
+            
+            {% if contact.last_activity_date %}
+            <div class="info-group">
+                <div class="info-label">Last Activity:</div>
+                <div class="info-value">{{ contact.last_activity_date|date:"M d, Y H:i" }}</div>
+            </div>
+            {% endif %}
+            
+            {% if contact.hunter_department %}
+            <div class="info-group">
+                <div class="info-label">Department:</div>
+                <div class="info-value">{{ contact.hunter_department }}</div>
+            </div>
+            {% endif %}
+            
+            {% if contact.hunter_seniority %}
+            <div class="info-group">
+                <div class="info-label">Seniority:</div>
+                <div class="info-value">{{ contact.hunter_seniority }}</div>
+            </div>
+            {% endif %}
+            
+            {% if contact.zerobounce_status %}
+            <div class="info-group">
+                <div class="info-label">Email Verification:</div>
+                <div class="info-value">
+                    <span class="email-status email-{{ contact.zerobounce_status }}">
+                        {{ contact.get_zerobounce_status_display }}
+                    </span>
+                    {% if contact.zerobounce_processed_at %}
+                    (checked on {{ contact.zerobounce_processed_at|date:"M d, Y" }})
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .contact-detail-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .contact-detail-container {
+            grid-template-columns: 2fr 1fr;
+        }
+        
+        .contact-info-card {
+            grid-column: 1 / 2;
+        }
+        
+        .contact-social-card, 
+        .contact-lists-card, 
+        .contact-metadata-card {
+            grid-column: 2 / 3;
+        }
+    }
+    
+    .contact-info-card,
+    .contact-social-card,
+    .contact-lists-card,
+    .contact-metadata-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .info-group {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .status-new {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-sent {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-replied {
+        background-color: #f9fbe7;
+        color: #afb42b;
+    }
+    
+    .status-unsubscribed {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .social-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .social-links li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .social-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .no-social,
+    .no-lists {
+        font-style: italic;
+        opacity: 0.7;
+    }
+    
+    .lists-container {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .lists-container li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .lists-container li:last-child {
+        border-bottom: none;
+    }
+    
+    .list-count {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    .email-status {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .email-valid {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .email-invalid {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .email-catch-all,
+    .email-unknown {
+        background-color: #fff8e1;
+        color: #ff8f00;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}
