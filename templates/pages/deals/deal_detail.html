@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+
+{% block title %}Deal Details{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'deals:deal_list' %}">
+            <i class="ph ph-currency-dollar"></i> Deals
+        </a>
+        <span class="divider">/</span>
+        <span>Deal Details</span>
+    </div>
+    
+    <h1>
+        {% if deal.contact %}
+        Deal for {{ deal.contact.first_name }} {{ deal.contact.last_name }}
+        {% else %}
+        Deal Details
+        {% endif %}
+    </h1>
+    
+    <div class="status-section">
+        {% if deal.is_won %}
+        <div class="status-badge status-won">Won</div>
+        {% elif deal.is_lost %}
+        <div class="status-badge status-lost">
+            Lost
+            {% if deal.lost_reason != 'none' %}
+            ({{ deal.get_lost_reason_display }})
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="status-badge status-active">Active</div>
+        {% endif %}
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'deals:deal_update' deal.id %}" class="btn">
+            <i class="ph ph-pencil"></i> Edit Deal
+        </a>
+        
+        {% if not deal.is_won and not deal.is_lost %}
+        <form method="post" action="{% url 'deals:deal_mark_as_won' deal.id %}" style="display: inline;" onsubmit="return confirm('Mark this deal as won?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="ph ph-check"></i> Mark as Won
+            </button>
+        </form>
+        
+        <a href="{% url 'deals:deal_mark_as_lost' deal.id %}" class="btn btn-danger">
+            <i class="ph ph-x"></i> Mark as Lost
+        </a>
+        {% endif %}
+        
+        <a href="{% url 'deals:deal_delete' deal.id %}" class="btn btn-danger">
+            <i class="ph ph-trash"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="deal-detail-container">
+    <div class="deal-info-card">
+        <div class="card-header">
+            <h2>Deal Information</h2>
+        </div>
+        
+        <div class="card-body">
+            <div class="deal-value-section">
+                <div class="value-item">
+                    <div class="value-label">Deal Value</div>
+                    <div class="value-amount">${{ deal.value|floatformat:2 }}</div>
+                </div>
+                
+                <div class="value-item">
+                    <div class="value-label">Expected Value</div>
+                    <div class="value-amount expected-value">${{ deal.expected_value|floatformat:2 }}</div>
+                </div>
+            </div>
+            
+            <div class="deal-details-grid">
+                <div class="detail-group">
+                    <div class="detail-label">Stage</div>
+                    <div class="detail-value">
+                        {% if deal.stage %}
+                        {{ deal.stage.name }}
+                        <div class="detail-sub">
+                            {{ deal.stage.conversion_probability|floatformat:2 }} conversion probability
+                        </div>
+                        {% else %}
+                        <em>Not assigned</em>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if deal.manual_conversion_probability is not None %}
+                <div class="detail-group">
+                    <div class="detail-label">Custom Probability</div>
+                    <div class="detail-value">{{ deal.manual_conversion_probability|floatformat:2 }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="detail-group">
+                    <div class="detail-label">Estimated Close Date</div>
+                    <div class="detail-value">
+                        {% if deal.estimated_close_date %}
+                        {{ deal.estimated_close_date|date:"M d, Y" }}
+                        {% if deal.days_until_close is not None %}
+                        <div class="detail-sub">
+                            {% if deal.days_until_close == 0 %}
+                            Closing today
+                            {% elif deal.days_until_close == 1 %}
+                            Closing tomorrow
+                            {% else %}
+                            Closing in {{ deal.days_until_close }} days
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <em>Not set</em>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="detail-group">
+                    <div class="detail-label">Created</div>
+                    <div class="detail-value">{{ deal.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+                
+                <div class="detail-group">
+                    <div class="detail-label">Last Updated</div>
+                    <div class="detail-value">{{ deal.updated_at|date:"M d, Y H:i" }}</div>
+                </div>
+            </div>
+            
+            {% if deal.notes %}
+            <div class="notes-section">
+                <h3>Notes</h3>
+                <div class="notes-content">{{ deal.notes|linebreaks }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="contact-info-card">
+        <div class="card-header">
+            <h2>Contact Information</h2>
+        </div>
+        
+        <div class="card-body">
+            {% if deal.contact %}
+            <div class="contact-name">
+                <a href="{% url 'contact_detail' deal.contact.id %}">
+                    {{ deal.contact.first_name }} {{ deal.contact.last_name }}
+                </a>
+            </div>
+            
+            <div class="contact-details">
+                <div class="contact-detail">
+                    <i class="ph ph-envelope"></i>
+                    <span>{{ deal.contact.email }}</span>
+                </div>
+                
+                {% if deal.contact.position %}
+                <div class="contact-detail">
+                    <i class="ph ph-briefcase"></i>
+                    <span>{{ deal.contact.position }}</span>
+                </div>
+                {% endif %}
+                
+                {% if deal.contact.company %}
+                <div class="contact-detail">
+                    <i class="ph ph-buildings"></i>
+                    <span>
+                        <a href="{% url 'company_detail' deal.contact.company.id %}">
+                            {{ deal.contact.company.name }}
+                        </a>
+                    </span>
+                </div>
+                {% elif deal.contact.organization_name %}
+                <div class="contact-detail">
+                    <i class="ph ph-buildings"></i>
+                    <span>{{ deal.contact.organization_name }}</span>
+                </div>
+                {% endif %}
+                
+                {% if deal.contact.phone_number %}
+                <div class="contact-detail">
+                    <i class="ph ph-phone"></i>
+                    <span>{{ deal.contact.phone_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="contact-actions">
+                <a href="{% url 'deals:deal_create' %}?contact={{ deal.contact.id }}" class="btn btn-sm">
+                    <i class="ph ph-plus"></i> Create Another Deal
+                </a>
+            </div>
+            {% else %}
+            <div class="no-contact">
+                <p>No contact associated with this deal.</p>
+                <a href="{% url 'deals:deal_update' deal.id %}" class="btn btn-sm">
+                    <i class="ph ph-user-plus"></i> Add Contact
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .status-section {
+        margin: 1rem 0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    
+    .status-active {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-won {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-lost {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .deal-detail-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .deal-detail-container {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+    
+    .deal-info-card,
+    .contact-info-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .deal-value-section {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .value-item {
+        flex: 1;
+    }
+    
+    .value-label {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 0.25rem;
+    }
+    
+    .value-amount {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .expected-value {
+        color: var(--links);
+    }
+    
+    .deal-details-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    @media (min-width: 576px) {
+        .deal-details-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .detail-group {
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-sub {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+    }
+    
+    .notes-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .notes-section h3 {
+        font-size: 1.1rem;
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+    }
+    
+    .notes-content {
+        background-color: var(--background-alt);
+        padding: 1rem;
+        border-radius: 4px;
+        white-space: pre-line;
+    }
+    
+    .contact-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .contact-details {
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-detail {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .contact-detail i {
+        flex-shrink: 0;
+        margin-top: 0.2rem;
+    }
+    
+    .no-contact {
+        text-align: center;
+        padding: 1rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .no-contact p {
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-success {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+    }
+    
+    .btn-success:hover {
+        background-color: #27ae60;
+        border-color: #27ae60;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}

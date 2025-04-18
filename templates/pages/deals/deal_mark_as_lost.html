@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Deal as Lost{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-breadcrumb">
+        <a href="{% url 'deals:deal_list' %}">
+            <i class="ph ph-currency-dollar"></i> Deals
+        </a>
+        <span class="divider">/</span>
+        <a href="{% url 'deals:deal_detail' deal.id %}">Deal Details</a>
+        <span class="divider">/</span>
+        <span>Mark as Lost</span>
+    </div>
+    
+    <h1>Mark Deal as Lost</h1>
+</div>
+
+<div class="form-container">
+    <div class="info-box">
+        <div class="info-icon">
+            <i class="ph ph-info"></i>
+        </div>
+        <div class="info-content">
+            <h3>You're about to mark this deal as lost</h3>
+            <p>Please provide a reason why this deal was lost. This information can help improve your sales process.</p>
+        </div>
+    </div>
+    
+    <div class="deal-summary-box">
+        <h3>Deal Details</h3>
+        <div class="deal-summary">
+            <div class="summary-item">
+                <div class="summary-label">Contact:</div>
+                <div class="summary-value">
+                    {% if deal.contact %}
+                    {{ deal.contact.first_name }} {{ deal.contact.last_name }}
+                    {% else %}
+                    No contact associated
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-label">Value:</div>
+                <div class="summary-value">${{ deal.value|floatformat:2 }}</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-label">Stage:</div>
+                <div class="summary-value">
+                    {% if deal.stage %}
+                    {{ deal.stage.name }}
+                    {% else %}
+                    No stage assigned
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if deal.estimated_close_date %}
+            <div class="summary-item">
+                <div class="summary-label">Estimated Close Date:</div>
+                <div class="summary-value">{{ deal.estimated_close_date|date:"M d, Y" }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form method="post" action="{% url 'deals:deal_mark_as_lost' deal.id %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="reason">Reason for Loss</label>
+            <select name="reason" id="reason" class="form-control">
+                {% for value, label in lost_reasons %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Mark as Lost</button>
+            <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-breadcrumb {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .divider {
+        color: var(--border);
+    }
+    
+    .form-container {
+        margin-top: 1.5rem;
+        max-width: 800px;
+    }
+    
+    .info-box {
+        display: flex;
+        gap: 1rem;
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-icon {
+        color: #2196f3;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .info-content h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .info-content p {
+        margin: 0;
+    }
+    
+    .deal-summary-box {
+        background-color: var(--background-alt);
+        border-radius: 4px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .deal-summary-box h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .deal-summary {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    @media (min-width: 576px) {
+        .deal-summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .summary-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-label {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background-color: var(--background);
+        color: var(--text);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+</style>
+{% endblock %}

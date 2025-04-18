@@ -1,0 +1,131 @@
+<!-- Partial template for deal results to be loaded via HTMX -->
+<h2>Deals ({{ deals.paginator.count }})</h2>
+
+{% if deals %}
+<div class="table-container">
+    <table class="deal-table">
+        <thead>
+            <tr>
+                <th>Contact</th>
+                <th>Value</th>
+                <th>Expected Value</th>
+                <th>Stage</th>
+                <th>Status</th>
+                <th>Est. Close Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deal in deals %}
+            <tr>
+                <td>
+                    {% if deal.contact %}
+                    <a href="{% url 'contact_detail' deal.contact.id %}">{{ deal.contact.first_name }} {{ deal.contact.last_name }}</a>
+                    {% else %}
+                    <em>No contact</em>
+                    {% endif %}
+                </td>
+                <td>${{ deal.value|floatformat:2 }}</td>
+                <td>${{ deal.expected_value|floatformat:2 }}</td>
+                <td>
+                    {% if deal.stage %}
+                    {{ deal.stage.name }}
+                    {% else %}
+                    <em>No stage</em>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if deal.is_won %}
+                    <span class="status-badge status-won">Won</span>
+                    {% elif deal.is_lost %}
+                    <span class="status-badge status-lost">Lost</span>
+                    {% else %}
+                    <span class="status-badge status-active">Active</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if deal.estimated_close_date %}
+                    {{ deal.estimated_close_date|date:"M d, Y" }}
+                    {% if deal.days_until_close is not None %}
+                    {% if deal.days_until_close == 0 %}
+                    (Today)
+                    {% elif deal.days_until_close == 1 %}
+                    (Tomorrow)
+                    {% else %}
+                    (in {{ deal.days_until_close }} days)
+                    {% endif %}
+                    {% endif %}
+                    {% else %}
+                    <em>Not set</em>
+                    {% endif %}
+                </td>
+                <td class="actions-cell">
+                    <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-sm" title="View Details">
+                        <i class="ph ph-info"></i>
+                    </a>
+                    <a href="{% url 'deals:deal_update' deal.id %}" class="btn btn-sm" title="Edit">
+                        <i class="ph ph-pencil"></i>
+                    </a>
+                    {% if not deal.is_won and not deal.is_lost %}
+                    <form method="post" action="{% url 'deals:deal_mark_as_won' deal.id %}" style="display: inline;" onsubmit="return confirm('Mark this deal as won?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success" title="Mark as Won">
+                            <i class="ph ph-check"></i>
+                        </button>
+                    </form>
+                    <a href="{% url 'deals:deal_mark_as_lost' deal.id %}" class="btn btn-sm btn-danger" title="Mark as Lost">
+                        <i class="ph ph-x"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if deals.has_other_pages %}
+<div class="pagination">
+    <span class="pagination-info">
+        Page {{ deals.number }} of {{ deals.paginator.num_pages }}
+    </span>
+    
+    <div class="pagination-controls">
+        {% if deals.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="btn btn-sm">
+            <i class="ph ph-caret-double-left"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ deals.previous_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-left"></i>
+        </a>
+        {% endif %}
+        
+        {% for num in deals.paginator.page_range %}
+            {% if deals.number == num %}
+            <span class="current-page">{{ num }}</span>
+            {% elif num > deals.number|add:'-3' and num < deals.number|add:'3' %}
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" class="btn btn-sm">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if deals.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ deals.next_page_number }}" class="btn btn-sm">
+            <i class="ph ph-caret-right"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ deals.paginator.num_pages }}" class="btn btn-sm">
+            <i class="ph ph-caret-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="ph ph-currency-dollar"></i>
+    <p>No deals found matching your criteria.</p>
+    {% if request.GET %}
+    <a href="{% url 'deals:deal_list' %}" class="btn">Clear Filters</a>
+    {% endif %}
+</div>
+{% endif %}

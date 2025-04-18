@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Deals{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1><i class="ph ph-currency-dollar"></i> Deals</h1>
+    <p>Manage your sales pipeline and track opportunities</p>
+    
+    <div class="action-buttons">
+        <a href="{% url 'deals:deal_create' %}" class="btn">
+            <i class="ph ph-plus"></i> Add Deal
+        </a>
+        <a href="{% url 'deals:pipeline' %}" class="btn">
+            <i class="ph ph-chart-line-up"></i> View Pipeline
+        </a>
+        <a href="{% url 'deals:stage_list' %}" class="btn btn-secondary">
+            <i class="ph ph-folders"></i> Manage Stages
+        </a>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="ph ph-hourglass"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.active_count }}</div>
+                <div class="stat-label">Active Deals</div>
+                <div class="stat-value-sub">${{ stats.active_value|floatformat:2 }}</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon success-icon">
+                <i class="ph ph-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.won_count }}</div>
+                <div class="stat-label">Won Deals</div>
+                <div class="stat-value-sub">${{ stats.won_value|floatformat:2 }}</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon danger-icon">
+                <i class="ph ph-x-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.lost_count }}</div>
+                <div class="stat-label">Lost Deals</div>
+                <div class="stat-value-sub">${{ stats.lost_value|floatformat:2 }}</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon primary-icon">
+                <i class="ph ph-calculator"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">${{ stats.pipeline_value|floatformat:2 }}</div>
+                <div class="stat-label">Expected Pipeline Value</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-section">
+    <form method="get" action="{% url 'deals:deal_list' %}" class="filter-form" hx-get="{% url 'deals:deal_list_results' %}" hx-target="#deal-list-container" hx-swap="innerHTML" hx-trigger="change delay:500ms from:select, submit">
+        <h3>Filter Deals</h3>
+        <div class="filter-form-fields">
+            <div class="form-group">
+                <label for="{{ form.contact.id_for_label }}">Contact</label>
+                {{ form.contact }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.value_min.id_for_label }}">Min Value</label>
+                {{ form.value_min }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.value_max.id_for_label }}">Max Value</label>
+                {{ form.value_max }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.stage.id_for_label }}">Stage</label>
+                {{ form.stage }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.close_date_start.id_for_label }}">Close Date From</label>
+                {{ form.close_date_start }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.close_date_end.id_for_label }}">Close Date To</label>
+                {{ form.close_date_end }}
+            </div>
+            
+            <div class="form-group form-actions">
+                <button type="submit" class="btn">Apply Filters</button>
+                <a href="{% url 'deals:deal_list' %}">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="deal-list-container">
+    {% include 'components/deals/deal_results.html' %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .stats-section {
+        margin-bottom: 2rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background-color: var(--background-alt);
+        padding: 1.25rem;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        color: #666;
+    }
+    
+    .success-icon {
+        color: #2ecc71;
+    }
+    
+    .danger-icon {
+        color: #e74c3c;
+    }
+    
+    .primary-icon {
+        color: var(--links);
+    }
+    
+    .stat-content {
+        flex-grow: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    
+    .stat-value-sub {
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    .filter-section {
+        background-color: var(--background-alt);
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-form-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+    
+    .deal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .deal-table th,
+    .deal-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .deal-table th {
+        background-color: var(--background-alt);
+        font-weight: bold;
+    }
+    
+    .deal-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .status-active {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-won {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-lost {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .actions-cell {
+        white-space: nowrap;
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--background-alt);
+        border-radius: 4px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+    
+    .btn-success {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+    }
+    
+    .btn-success:hover {
+        background-color: #27ae60;
+        border-color: #27ae60;
+    }
+</style>
+{% endblock %}
