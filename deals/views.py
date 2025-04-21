@@ -140,31 +140,48 @@ def deal_detail(request, deal_id):
         'deal': deal,
     })
 
-def deal_create(request):
-    """View for creating a new deal"""
+def deal_create(request, contact_id=None):
+    """View for creating a new deal with a specific contact"""
+    contact = None
+    
+    # Get the contact if provided
+    if contact_id:
+        contact = get_object_or_404(Contact, id=contact_id)
+    
     if request.method == 'POST':
         form = DealForm(request.POST)
+        
+        # If we have a contact but it's disabled in the form, set it manually
+        if contact and 'contact' not in request.POST:
+            form.data = form.data.copy()  # Make mutable
+            form.data['contact'] = contact.id
+        
         if form.is_valid():
             deal = form.save()
             messages.success(request, f"Deal for {deal.contact} created successfully!")
             return redirect('deals:deal_detail', deal_id=deal.id)
     else:
-        form = DealForm()
+        # Pre-fill the contact if provided
+        initial_data = {}
+        if contact:
+            initial_data['contact'] = contact.id
         
-        # Pre-fill contact if provided in query string
-        contact_id = request.GET.get('contact')
-        if contact_id:
-            try:
-                contact = Contact.objects.get(id=contact_id)
-                form.fields['contact'].initial = contact.id
-            except Contact.DoesNotExist:
-                pass
+        form = DealForm(initial=initial_data)
+        
+        # Make contact field read-only if a contact is provided
+        if contact:
+            form.fields['contact'].widget.attrs['readonly'] = True
     
-    return render(request, 'pages/deals/deal_form.html', {
+    context = {
         'form': form,
-        'title': 'Create Deal',
+        'title': 'Create Deal' if not contact else f'Create Deal for {contact.first_name} {contact.last_name}',
         'submit_text': 'Create Deal',
-    })
+    }
+    
+    if contact:
+        context['contact'] = contact
+    
+    return render(request, 'pages/deals/deal_form.html', context)
 
 def deal_update(request, deal_id):
     """View for updating an existing deal"""

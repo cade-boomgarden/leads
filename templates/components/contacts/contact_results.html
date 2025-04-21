@@ -67,6 +67,9 @@
                     <a href="{% url 'contact_update' contact.id %}" class="btn btn-sm" title="Edit">
                         <i class="ph ph-pencil"></i>
                     </a>
+                    <a href="{% url 'deals:deal_create' contact.id %}" class="btn btn-sm" title="Create Deal">
+                        <i class="ph ph-currency-dollar"></i>
+                    </a>
                     <a href="{% url 'contact_delete' contact.id %}" class="btn btn-sm btn-danger" title="Delete">
                         <i class="ph ph-trash"></i>
                     </a>

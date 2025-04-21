@@ -13,6 +13,10 @@
         <a href="{% url 'deals:deal_detail' deal.id %}">Deal Details</a>
         <span class="divider">/</span>
         <span>Edit</span>
+        {% elif contact %}
+        <a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a>
+        <span class="divider">/</span>
+        <span>Create Deal</span>
         {% else %}
         <span>Create New Deal</span>
         {% endif %}
@@ -36,19 +40,37 @@
         <div class="form-section">
             <h2>Deal Information</h2>
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.contact.id_for_label }}">Contact*</label>
-                    {{ form.contact }}
-                    {% if form.contact.errors %}
-                    <div class="field-errors">
-                        {% for error in form.contact.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
+            {% if contact %}
+            <input type="hidden" name="contact" value="{{ contact.id }}">
+            <div class="contact-info-box">
+                <div class="contact-icon">
+                    <i class="ph ph-user"></i>
+                </div>
+                <div class="contact-details">
+                    <h3>{{ contact.first_name }} {{ contact.last_name }}</h3>
+                    <div class="contact-email">{{ contact.email }}</div>
+                    {% if contact.company %}
+                    <div class="contact-company">{{ contact.company.name }}</div>
+                    {% elif contact.organization_name %}
+                    <div class="contact-company">{{ contact.organization_name }}</div>
                     {% endif %}
                 </div>
-                
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label for="{{ form.contact.id_for_label }}">Contact*</label>
+                {{ form.contact }}
+                {% if form.contact.errors %}
+                <div class="field-errors">
+                    {% for error in form.contact.errors %}
+                    <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="{{ form.value.id_for_label }}">Deal Value*</label>
                     {{ form.value }}
@@ -61,9 +83,7 @@
                     {% endif %}
                     <small class="help-text">{{ form.value.help_text }}</small>
                 </div>
-            </div>
-            
-            <div class="form-grid">
+                
                 <div class="form-group">
                     <label for="{{ form.stage.id_for_label }}">Deal Stage*</label>
                     {{ form.stage }}
@@ -75,7 +95,9 @@
                     </div>
                     {% endif %}
                 </div>
-                
+            </div>
+            
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="{{ form.manual_conversion_probability.id_for_label }}">{{ form.manual_conversion_probability.label }}</label>
                     {{ form.manual_conversion_probability }}
@@ -88,19 +110,19 @@
                     {% endif %}
                     <small class="help-text">{{ form.manual_conversion_probability.help_text }}</small>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.estimated_close_date.id_for_label }}">Estimated Close Date</label>
-                {{ form.estimated_close_date }}
-                {% if form.estimated_close_date.errors %}
-                <div class="field-errors">
-                    {% for error in form.estimated_close_date.errors %}
-                    <p class="error">{{ error }}</p>
-                    {% endfor %}
+                
+                <div class="form-group">
+                    <label for="{{ form.estimated_close_date.id_for_label }}">Estimated Close Date</label>
+                    {{ form.estimated_close_date }}
+                    {% if form.estimated_close_date.errors %}
+                    <div class="field-errors">
+                        {% for error in form.estimated_close_date.errors %}
+                        <p class="error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="help-text">{{ form.estimated_close_date.help_text }}</small>
                 </div>
-                {% endif %}
-                <small class="help-text">{{ form.estimated_close_date.help_text }}</small>
             </div>
             
             <div class="form-group">
@@ -120,6 +142,8 @@
             <button type="submit" class="btn">{{ submit_text }}</button>
             {% if deal %}
             <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-secondary">Cancel</a>
+            {% elif contact %}
+            <a href="{% url 'contact_detail' contact.id %}" class="btn btn-secondary">Cancel</a>
             {% else %}
             <a href="{% url 'deals:deal_list' %}" class="btn btn-secondary">Cancel</a>
             {% endif %}
@@ -211,6 +235,32 @@
         margin-top: 2rem;
         display: flex;
         gap: 1rem;
+    }
+    
+    .contact-info-box {
+        background-color: var(--background-alt);
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .contact-icon {
+        font-size: 2rem;
+        color: var(--links);
+    }
+    
+    .contact-details h3 {
+        margin: 0;
+        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+    }
+    
+    .contact-email, .contact-company {
+        font-size: 0.9rem;
+        color: #666;
     }
 </style>
 {% endblock %}

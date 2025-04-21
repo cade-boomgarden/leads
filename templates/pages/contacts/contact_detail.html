@@ -18,6 +18,9 @@
         <a href="{% url 'contact_update' contact.id %}" class="btn">
             <i class="ph ph-pencil"></i> Edit
         </a>
+        <a href="{% url 'deals:deal_create' contact.id %}" class="btn">
+            <i class="ph ph-currency-dollar"></i> Create Deal
+        </a>
         <a href="{% url 'contact_delete' contact.id %}" class="btn btn-danger">
             <i class="ph ph-trash"></i> Delete
         </a>
@@ -179,6 +182,49 @@
             {% endif %}
         </div>
     </div>
+    <div class="contact-deals-card">
+        <div class="card-header">
+            <h2>Deals</h2>
+            <a href="{% url 'deals:deal_create' contact.id %}" class="btn btn-sm">
+                <i class="ph ph-plus"></i> Create Deal
+            </a>
+        </div>
+        <div class="card-body">
+            {% if contact.deals.all %}
+            <div class="deals-list">
+                {% for deal in contact.deals.all %}
+                <div class="deal-item">
+                    <div class="deal-info">
+                        <div class="deal-value">${{ deal.value|floatformat:2 }}</div>
+                        <div class="deal-stage">
+                            {% if deal.stage %}
+                            {{ deal.stage.name }}
+                            {% else %}
+                            <em>No stage</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="deal-status">
+                        {% if deal.is_won %}
+                        <span class="status-badge status-won">Won</span>
+                        {% elif deal.is_lost %}
+                        <span class="status-badge status-lost">Lost</span>
+                        {% else %}
+                        <span class="status-badge status-active">Active</span>
+                        {% endif %}
+                    </div>
+                    <div class="deal-actions">
+                        <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-sm">View</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-deals">No deals yet for this contact. <a href="{% url 'deals:deal_create' contact.id %}">Create a deal</a> to get started.</p>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -365,6 +411,76 @@
     .btn-danger:hover {
         background-color: #c0392b;
         border-color: #c0392b;
+    }
+    .contact-deals-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 1.5rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        background-color: var(--background-alt);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .deals-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .deal-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .deal-item:last-child {
+        border-bottom: none;
+    }
+    
+    .deal-value {
+        font-weight: bold;
+    }
+    
+    .deal-stage {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .status-active {
+        background-color: #e3f2fd;
+        color: #0288d1;
+    }
+    
+    .status-won {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-lost {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .no-deals {
+        text-align: center;
+        padding: 1rem;
+        font-style: italic;
+        color: #666;
     }
 </style>
 {% endblock %}
