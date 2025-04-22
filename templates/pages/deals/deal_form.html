@@ -29,7 +29,7 @@
             
             <div role="group">
                 <button type="submit">{{ submit_text }}</button>
-                <a href="{% if deal %}{% url 'deal_detail' deal.id %}{% else %}{% url 'deal_list' %}{% endif %}" role="button" class="danger">Cancel</a>
+                <a href="{% if deal %}{% url 'deal_detail' deal.id %}{% else %}{% url 'deal_list' %}{% endif %}" role="button" class="outline">Cancel</a>
             </div>
         </form>
     </article>

@@ -15,6 +15,7 @@
         {% if search_params %}
         <div class="grid">
             <div>
+                {% if search.method == 'scrape' %}
                 <h3>Scrape Parameters</h3>
                 <dl>
                     <dt>Target URL</dt>
@@ -24,6 +25,31 @@
                     <dt>Max Pages</dt>
                     <dd>{{ search_params.max_pages }}</dd>
                 </dl>
+                {% elif search.method == 'hunter' %}
+                <h3>Hunter Search Parameters</h3>
+                <dl>
+                    <dt>Domain</dt>
+                    <dd>{{ search_params.domain|default:"-" }}</dd>
+                    <dt>Company</dt>
+                    <dd>{{ search_params.company|default:"-" }}</dd>
+                    <dt>Email Type</dt>
+                    <dd>{{ search_params.get_type_display }}</dd>
+                    <dt>Results Limit</dt>
+                    <dd>{{ search_params.limit }}</dd>
+                    {% if search_params.seniority_levels %}
+                    <dt>Seniority Levels</dt>
+                    <dd>{{ search_params.seniority_levels|join:", " }}</dd>
+                    {% endif %}
+                    {% if search_params.departments %}
+                    <dt>Departments</dt>
+                    <dd>{{ search_params.departments|join:", " }}</dd>
+                    {% endif %}
+                    {% if search_params.required_fields %}
+                    <dt>Required Fields</dt>
+                    <dd>{{ search_params.required_fields|join:", " }}</dd>
+                    {% endif %}
+                </dl>
+                {% endif %}
             </div>
         </div>
         {% endif %}

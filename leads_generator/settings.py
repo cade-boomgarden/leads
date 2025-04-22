@@ -139,3 +139,4 @@ pool = ConnectionPool(host=os.environ.get('REDIS_HOST', 'redis'), port=6379, max
 HUEY = RedisHuey('leads', connection_pool=pool, immediate=False)
 
 SERPAPI_API_KEY = os.environ.get('SERPAPI_API_KEY')
+HUNTER_API_KEY = os.environ.get('HUNTER_API_KEY')

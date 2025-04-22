@@ -14,7 +14,7 @@
             <p>Are you sure you want to delete <strong>{{ contact_list.name }}</strong> and its {{ contact_list.contacts.count }} contacts?</p>
             <div role="group">
                 <button type="submit" class="danger">Confirm Delete</button>
-                <a href="{% url 'contact_list_detail' contact_list.id %}" role="button">Cancel</a>
+                <a href="{% url 'contact_list_detail' contact_list.id %}" role="button" class="outline">Cancel</a>
             </div>
         </form>
     </article>

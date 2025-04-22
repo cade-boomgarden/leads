@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
-from .forms import SerpAPISearchForm, WebScrapeForm
-from .models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebScrapeParameters
-from .tasks import execute_serpapi_search, execute_webscrape_search
+from .forms import SerpAPISearchForm, WebScrapeForm, HunterDomainSearchForm
+from .models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebScrapeParameters, HunterDomainSearchParameters
+from .tasks import execute_serpapi_search, execute_webscrape_search, execute_hunter_search
 
 def serpapi_search(request):
     """View for the SerpAPI search form"""
@@ -128,9 +128,66 @@ def contact_search_detail(request, search_id):
     search_params = None
     if search.method == ContactSearch.ContactSearchMethods.SCRAPE:
         search_params = search.webscrape_parameters
+    elif search.method == ContactSearch.ContactSearchMethods.HUNTER:
+        search_params = search.hunter_parameters
     
     return render(request, 'pages/finder/contact_search_detail.html', {
         'search': search,
         'contacts': contacts,
         'search_params': search_params
     })
+
+def hunter_search(request):
+    """View for the Hunter.io domain search form"""
+    if request.method == 'POST':
+        form = HunterDomainSearchForm(request.POST)
+        if form.is_valid():
+            # Create ContactSearch object
+            contact_search = ContactSearch.objects.create(
+                method=ContactSearch.ContactSearchMethods.HUNTER,
+                results_count=0  # Will be updated when the search completes
+            )
+            
+            # Get the form data
+            source_type = form.cleaned_data['source_type']
+            domain = form.cleaned_data.get('domain', '')
+            company = form.cleaned_data.get('company', '')
+            company_list = form.cleaned_data.get('company_list')
+            
+            # Convert multiple choice fields to lists
+            seniority_levels = list(form.cleaned_data.get('seniority', []))
+            departments = list(form.cleaned_data.get('department', []))
+            required_fields = list(form.cleaned_data.get('required_fields', []))
+            
+            # Create HunterDomainSearchParameters
+            search_params = HunterDomainSearchParameters.objects.create(
+                contact_search=contact_search,
+                domain=domain if source_type == 'domain' else '',
+                company=company if source_type == 'company' else '',
+                type=form.cleaned_data['type'],
+                seniority_levels=seniority_levels,
+                departments=departments,
+                required_fields=required_fields,
+                limit=form.cleaned_data['limit'],
+                offset=0  # Start from the first page
+            )
+            
+            # Queue the search task based on the source type
+            if source_type == 'domain':
+                execute_hunter_search(contact_search.id, domain=domain)
+            elif source_type == 'company':
+                execute_hunter_search(contact_search.id, company=company)
+            elif source_type == 'company_list' and company_list:
+                # Search for all domains in the company list
+                execute_hunter_search(contact_search.id, company_list_id=company_list.id)
+            
+            # Display any warnings
+            for warning in getattr(form, 'warnings', []):
+                messages.warning(request, warning)
+            
+            messages.success(request, "Hunter search initiated successfully! You'll be notified when it's complete.")
+            return redirect('contact_search_list')
+    else:
+        form = HunterDomainSearchForm()
+    
+    return render(request, 'pages/finder/hunter_search.html', {'form': form})

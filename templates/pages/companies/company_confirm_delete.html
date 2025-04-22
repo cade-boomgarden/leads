@@ -13,7 +13,7 @@
             {% csrf_token %}
             <p>Are you sure you want to delete <strong>{{ company.name }}</strong>?</p>
             <button type="submit" class="danger">Confirm Delete</button>
-            <a href="{% url 'company_detail' company.id %}" role="button">Cancel</a>
+            <a href="{% url 'company_detail' company.id %}" role="button" class="outline">Cancel</a>
         </form>
     </article>
 {% endblock %}

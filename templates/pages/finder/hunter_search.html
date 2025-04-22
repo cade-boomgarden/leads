@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Hunter Domain Search{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article x-data="{ sourceType: '{{ form.source_type.value|default:'domain' }}' }">
+        <header>
+            <h1>Find Contacts with Hunter</h1>
+            <p>Search company domains for verified email addresses using Hunter.io</p>
+        </header>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div>
+                <h3>Select Source</h3>
+                <div>
+                    {{ form.source_type.label_tag }}
+                    <div x-data>
+                        {% for radio in form.source_type %}
+                        <label>
+                            <input type="radio" name="source_type" value="{{ radio.data.value }}" 
+                                   @click="sourceType = '{{ radio.data.value }}'"
+                                   {% if form.source_type.value == radio.data.value %}checked{% endif %}>
+                            {{ radio.choice_label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.source_type.help_text %}
+                    <small>{{ form.source_type.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.source_type.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="sourceType === 'domain'">
+                    {{ form.domain.label_tag }}
+                    {{ form.domain }}
+                    {% if form.domain.help_text %}
+                    <small>{{ form.domain.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.domain.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="sourceType === 'company'">
+                    {{ form.company.label_tag }}
+                    {{ form.company }}
+                    {% if form.company.help_text %}
+                    <small>{{ form.company.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.company.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="sourceType === 'company_list'">
+                    {{ form.company_list.label_tag }}
+                    {{ form.company_list }}
+                    {% if form.company_list.help_text %}
+                    <small>{{ form.company_list.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.company_list.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                <h3>Filtering Options</h3>
+                <div>
+                    {{ form.type.label_tag }}
+                    {{ form.type }}
+                    {% if form.type.help_text %}
+                    <small>{{ form.type.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {{ form.limit.label_tag }}
+                    {{ form.limit }}
+                    {% if form.limit.help_text %}
+                    <small>{{ form.limit.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="grid">
+                    <div>
+                        <h4>Seniority Levels</h4>
+                        {{ form.seniority }}
+                        {% if form.seniority.help_text %}
+                        <small>{{ form.seniority.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <h4>Required Fields</h4>
+                        {{ form.required_fields }}
+                        {% if form.required_fields.help_text %}
+                        <small>{{ form.required_fields.help_text }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <h4>Departments</h4>
+                    {{ form.department }}
+                    {% if form.department.help_text %}
+                    <small>{{ form.department.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div role="group">
+                <button type="submit">Start Search</button>
+                <a href="{% url 'contact_search_list' %}" role="button" class="outline">Cancel</a>
+            </div>
+        </form>
+    </article>
+{% endblock %}

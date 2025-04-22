@@ -283,3 +283,141 @@ class WebScrapeForm(forms.Form):
     def warnings(self):
         """Get any warning messages"""
         return getattr(self, '_warnings', [])
+    
+class HunterDomainSearchForm(forms.Form):
+    """Form for searching domains using Hunter.io API"""
+    
+    # Source selection
+    source_type = forms.ChoiceField(
+        label="Source Type",
+        choices=[
+            ('domain', 'Single Domain'),
+            ('company', 'Company Name'),
+            ('company_list', 'Company List'),
+        ],
+        widget=forms.RadioSelect,
+        initial='domain',
+        help_text="Select what to search for contacts"
+    )
+    
+    domain = forms.CharField(
+        label="Domain",
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'example.com'}),
+        help_text="Domain name to search (e.g., 'stripe.com')"
+    )
+    
+    company = forms.CharField(
+        label="Company Name",
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Example Inc'}),
+        help_text="Company name to search (e.g., 'Stripe')"
+    )
+    
+    company_list = forms.ModelChoiceField(
+        label="Company List",
+        queryset=CompanyList.objects.all(),
+        required=False,
+        help_text="Select a list of companies to search"
+    )
+    
+    # Email type filter
+    type = forms.ChoiceField(
+        label="Email Type",
+        choices=[
+            ('all', 'All Email Types'),
+            ('personal', 'Personal Emails Only'),
+            ('generic', 'Generic Emails Only'),
+        ],
+        initial='all',
+        help_text="Type of email addresses to return"
+    )
+    
+    # Filtering options
+    seniority = forms.MultipleChoiceField(
+        label="Seniority Levels",
+        choices=[
+            ('junior', 'Junior'),
+            ('senior', 'Senior'),
+            ('executive', 'Executive'),
+        ],
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text="Filter by seniority level"
+    )
+    
+    department = forms.MultipleChoiceField(
+        label="Departments",
+        choices=[
+            ('executive', 'Executive'),
+            ('it', 'IT'),
+            ('finance', 'Finance'),
+            ('management', 'Management'),
+            ('sales', 'Sales'),
+            ('legal', 'Legal'),
+            ('support', 'Support'),
+            ('hr', 'Human Resources'),
+            ('marketing', 'Marketing'),
+            ('communication', 'Communication'),
+            ('education', 'Education'),
+            ('design', 'Design'),
+            ('health', 'Health'),
+            ('operations', 'Operations'),
+        ],
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text="Filter by department"
+    )
+    
+    required_fields = forms.MultipleChoiceField(
+        label="Required Fields",
+        choices=[
+            ('full_name', 'Full Name'),
+            ('position', 'Position'),
+            ('phone_number', 'Phone Number'),
+        ],
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text="Only return contacts with these fields available"
+    )
+    
+    # Pagination options
+    limit = forms.IntegerField(
+        label="Results Limit",
+        min_value=1,
+        max_value=100,
+        initial=10,
+        help_text="Maximum number of results to return per domain (1-100)"
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        source_type = cleaned_data.get('source_type')
+        domain = cleaned_data.get('domain')
+        company = cleaned_data.get('company')
+        company_list = cleaned_data.get('company_list')
+        
+        # Validate source type selection
+        if source_type == 'domain' and not domain:
+            self.add_error('domain', "Domain is required when 'Single Domain' is selected.")
+        
+        if source_type == 'company' and not company:
+            self.add_error('company', "Company name is required when 'Company Name' is selected.")
+        
+        if source_type == 'company_list' and not company_list:
+            self.add_error('company_list', "Company List is required when 'Company List' is selected.")
+            
+        return cleaned_data
+    
+    def add_warning(self, message):
+        """Add a non-blocking warning message"""
+        if not hasattr(self, '_warnings'):
+            self._warnings = []
+        self._warnings.append(message)
+    
+    @property
+    def warnings(self):
+        """Get any warning messages"""
+        return getattr(self, '_warnings', [])

@@ -125,3 +125,112 @@ def execute_webscrape_search(contact_search_id, company_list_id=None):
         print(f"Error executing web scrape search #{contact_search_id}: {str(e)}")
         # Re-raise to mark task as failed
         raise
+
+@task()
+def execute_hunter_search(contact_search_id, domain=None, company=None, company_list_id=None):
+    """
+    Execute a Hunter.io domain search as a background task
+    
+    Args:
+        contact_search_id: ID of the ContactSearch to process
+        domain: Domain to search (if specific domain)
+        company: Company name to search (if specific company)
+        company_list_id: ID of a CompanyList to search all domains in the list
+    """
+    try:
+        # Get the ContactSearch and search parameters
+        from finder.models import ContactSearch, HunterDomainSearchParameters
+        from finder.services.hunter_service import HunterService
+        from companies.models import Company, CompanyList
+        
+        contact_search = ContactSearch.objects.get(id=contact_search_id)
+        search_params = HunterDomainSearchParameters.objects.get(contact_search=contact_search)
+        
+        # Create Hunter service
+        hunter_service = HunterService()
+        
+        # Track total contacts found
+        total_contacts = 0
+        
+        # Process either a single domain/company or all domains in a list
+        if company_list_id:
+            # Get all companies from the list
+            company_list = CompanyList.objects.get(id=company_list_id)
+            companies = company_list.companies.all()
+            
+            # Process each company
+            for company_obj in companies:
+                # Skip companies without domains
+                if not company_obj.domain:
+                    continue
+                
+                # Execute domain search for this company
+                try:
+                    results = hunter_service.domain_search(
+                        domain=company_obj.domain,
+                        limit=search_params.limit,
+                        offset=search_params.offset,
+                        email_type=search_params.type if search_params.type != 'all' else None,
+                        seniority=search_params.seniority_levels,
+                        department=search_params.departments,
+                        required_fields=search_params.required_fields
+                    )
+                    
+                    # Create contacts from results
+                    contacts = hunter_service.create_contacts_from_results(results, company_obj)
+                    
+                    # Add contacts to the search
+                    for contact in contacts:
+                        contact_search.contacts.add(contact)
+                    
+                    total_contacts += len(contacts)
+                except Exception as e:
+                    print(f"Error searching Hunter for company {company_obj.name}: {str(e)}")
+                    # Continue with other companies
+                    continue
+        else:
+            # Search for a specific domain or company
+            domain_param = domain or search_params.domain
+            company_param = company or search_params.company
+            
+            # Get the company object if available
+            company_obj = None
+            if domain_param:
+                try:
+                    company_obj = Company.objects.get(domain=domain_param)
+                except Company.DoesNotExist:
+                    # Will create contacts without company association
+                    pass
+            
+            # Execute domain search
+            results = hunter_service.domain_search(
+                domain=domain_param,
+                company=company_param,
+                limit=search_params.limit,
+                offset=search_params.offset,
+                email_type=search_params.type if search_params.type != 'all' else None,
+                seniority=search_params.seniority_levels,
+                department=search_params.departments,
+                required_fields=search_params.required_fields
+            )
+            
+            # Create contacts from results
+            contacts = hunter_service.create_contacts_from_results(results, company_obj)
+            
+            # Add contacts to the search
+            for contact in contacts:
+                contact_search.contacts.add(contact)
+            
+            total_contacts = len(contacts)
+        
+        # Update results count
+        contact_search.results_count = total_contacts
+        contact_search.save()
+        
+        return f"Found {total_contacts} contacts for Hunter search #{contact_search_id}"
+        
+    except Exception as e:
+        # Log the error
+        print(f"Error executing Hunter search #{contact_search_id}: {str(e)}")
+        # Re-raise to mark task as failed
+        raise

@@ -9,6 +9,8 @@ urlpatterns = [
     
     # Contact search URLs
     path('webscrape/', views.webscrape_search, name='webscrape_search'),
+    path('hunter/', views.hunter_search, name='hunter_search'),
+
     path('contact-searches/', views.contact_search_list, name='contact_search_list'),
     path('contact-searches/<int:search_id>/', views.contact_search_detail, name='contact_search_detail'),
 ]

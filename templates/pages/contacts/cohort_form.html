@@ -29,7 +29,7 @@
             
             <div role="group">
                 <button type="submit">{{ submit_text }}</button>
-                <a href="{% if cohort %}{% url 'cohort_detail' cohort.id %}{% else %}{% url 'cohort_list' %}{% endif %}" role="button">Cancel</a>
+                <a href="{% if cohort %}{% url 'cohort_detail' cohort.id %}{% else %}{% url 'cohort_list' %}{% endif %}" role="button" class="outline">Cancel</a>
             </div>
         </form>
     </article>

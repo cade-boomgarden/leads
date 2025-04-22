@@ -4,7 +4,7 @@
 {% block content %}
     {% include "components/finder/finder_nav.html" %}
     
-    <article>
+    <article x-data="{ sourceType: '{{ form.source_type.value|default:'url' }}' }">
         <header>
             <h1>Scrape Contacts</h1>
             <p>Extract contact information from websites</p>
@@ -14,23 +14,175 @@
             {% csrf_token %}
             
             <div>
-                {% for field in form %}
+                <h3>Select Source</h3>
                 <div>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.help_text %}
-                    <small>{{ field.help_text }}</small>
+                    {{ form.source_type.label_tag }}
+                    <div x-data>
+                        {% for radio in form.source_type %}
+                        <label>
+                            <input type="radio" name="source_type" value="{{ radio.data.value }}" 
+                                   @click="sourceType = '{{ radio.data.value }}'"
+                                   {% if form.source_type.value == radio.data.value %}checked{% endif %}>
+                            {{ radio.choice_label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.source_type.help_text %}
+                    <small>{{ form.source_type.help_text }}</small>
                     {% endif %}
-                    {% for error in field.errors %}
+                    {% for error in form.source_type.errors %}
                     <p role="alert">{{ error }}</p>
                     {% endfor %}
                 </div>
-                {% endfor %}
+                
+                <div x-show="sourceType === 'url'">
+                    {{ form.target_url.label_tag }}
+                    {{ form.target_url }}
+                    {% if form.target_url.help_text %}
+                    <small>{{ form.target_url.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.target_url.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="sourceType === 'company_list'">
+                    {{ form.company_list.label_tag }}
+                    {{ form.company_list }}
+                    {% if form.company_list.help_text %}
+                    <small>{{ form.company_list.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.company_list.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                <h3>Scraping Configuration</h3>
+                <div class="grid">
+                    <div>
+                        {{ form.max_depth.label_tag }}
+                        {{ form.max_depth }}
+                        {% if form.max_depth.help_text %}
+                        <small>{{ form.max_depth.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        {{ form.max_pages.label_tag }}
+                        {{ form.max_pages }}
+                        {% if form.max_pages.help_text %}
+                        <small>{{ form.max_pages.help_text }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="grid">
+                    <div>
+                        <label>
+                            {{ form.stay_within_domain }}
+                            {{ form.stay_within_domain.label }}
+                        </label>
+                        {% if form.stay_within_domain.help_text %}
+                        <small>{{ form.stay_within_domain.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label>
+                            {{ form.follow_subdomains }}
+                            {{ form.follow_subdomains.label }}
+                        </label>
+                        {% if form.follow_subdomains.help_text %}
+                        <small>{{ form.follow_subdomains.help_text }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <details>
+                    <summary>Advanced Options</summary>
+                    
+                    <div class="grid">
+                        <div>
+                            <h4>Target Paths</h4>
+                            {{ form.priority_paths.label_tag }}
+                            {{ form.priority_paths }}
+                            {% if form.priority_paths.help_text %}
+                            <small>{{ form.priority_paths.help_text }}</small>
+                            {% endif %}
+                            
+                            {{ form.exclude_paths.label_tag }}
+                            {{ form.exclude_paths }}
+                            {% if form.exclude_paths.help_text %}
+                            <small>{{ form.exclude_paths.help_text }}</small>
+                            {% endif %}
+                            
+                            {{ form.target_keywords.label_tag }}
+                            {{ form.target_keywords }}
+                            {% if form.target_keywords.help_text %}
+                            <small>{{ form.target_keywords.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <h4>Extraction Options</h4>
+                            <div>
+                                <label>
+                                    {{ form.extract_names }}
+                                    {{ form.extract_names.label }}
+                                </label>
+                                {% if form.extract_names.help_text %}
+                                <small>{{ form.extract_names.help_text }}</small>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label>
+                                    {{ form.extract_job_titles }}
+                                    {{ form.extract_job_titles.label }}
+                                </label>
+                                {% if form.extract_job_titles.help_text %}
+                                <small>{{ form.extract_job_titles.help_text }}</small>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label>
+                                    {{ form.extract_phone_numbers }}
+                                    {{ form.extract_phone_numbers.label }}
+                                </label>
+                                {% if form.extract_phone_numbers.help_text %}
+                                <small>{{ form.extract_phone_numbers.help_text }}</small>
+                                {% endif %}
+                            </div>
+                            
+                            <h4>Rate Limiting</h4>
+                            <div class="grid">
+                                <div>
+                                    {{ form.request_delay.label_tag }}
+                                    {{ form.request_delay }}
+                                    {% if form.request_delay.help_text %}
+                                    <small>{{ form.request_delay.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div>
+                                    {{ form.concurrent_requests.label_tag }}
+                                    {{ form.concurrent_requests }}
+                                    {% if form.concurrent_requests.help_text %}
+                                    <small>{{ form.concurrent_requests.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
             
             <div role="group">
                 <button type="submit">Start Scraping</button>
-                <a href="{% url 'contact_search_list' %}" role="button">Cancel</a>
+                <a href="{% url 'contact_search_list' %}" role="button" class="outline">Cancel</a>
             </div>
         </form>
     </article>

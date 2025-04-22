@@ -1,195 +1,23 @@
-<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
-    <div class="container">
-        <div class="navbar-brand">
-            <a class="navbar-item" href="{% url 'home' %}">
-                <span class="icon">
-                    <i class="ph ph-chart-line-up"></i>
-                </span>
-                <span class="ml-2 has-text-weight-bold">Leads Generator</span>
-            </a>
-            
-            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNavbar">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </a>
-        </div>
-        
-        <div id="mainNavbar" class="navbar-menu">
-            <div class="navbar-start">
-                <!-- Companies dropdown -->
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        <span class="icon">
-                            <i class="ph ph-buildings"></i>
-                        </span>
-                        <span>Companies</span>
-                    </a>
-                    
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'company_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-list"></i>
-                            </span>
-                            <span>All Companies</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'company_create' %}">
-                            <span class="icon">
-                                <i class="ph ph-plus-circle"></i>
-                            </span>
-                            <span>Add Company</span>
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{% url 'company_list_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-folders"></i>
-                            </span>
-                            <span>Company Lists</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Contacts dropdown -->
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        <span class="icon">
-                            <i class="ph ph-user"></i>
-                        </span>
-                        <span>Contacts</span>
-                    </a>
-                    
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'contact_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-list"></i>
-                            </span>
-                            <span>All Contacts</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'contact_create' %}">
-                            <span class="icon">
-                                <i class="ph ph-user-plus"></i>
-                            </span>
-                            <span>Add Contact</span>
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{% url 'contact_list_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-folders"></i>
-                            </span>
-                            <span>Contact Lists</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'cohort_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-users-three"></i>
-                            </span>
-                            <span>Cohorts</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Deals dropdown -->
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        <span class="icon">
-                            <i class="ph ph-handshake"></i>
-                        </span>
-                        <span>Deals</span>
-                    </a>
-                    
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'deal_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-list"></i>
-                            </span>
-                            <span>All Deals</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'pipeline' %}">
-                            <span class="icon">
-                                <i class="ph ph-funnel"></i>
-                            </span>
-                            <span>Pipeline</span>
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{% url 'stage_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-steps"></i>
-                            </span>
-                            <span>Deal Stages</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Finder dropdown -->
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        <span class="icon">
-                            <i class="ph ph-magnifying-glass"></i>
-                        </span>
-                        <span>Finder</span>
-                    </a>
-                    
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'serpapi_search' %}">
-                            <span class="icon">
-                                <i class="ph ph-compass"></i>
-                            </span>
-                            <span>Find Companies</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'webscrape_search' %}">
-                            <span class="icon">
-                                <i class="ph ph-share-network"></i>
-                            </span>
-                            <span>Find Contacts</span>
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{% url 'search_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-history"></i>
-                            </span>
-                            <span>Company Search History</span>
-                        </a>
-                        <a class="navbar-item" href="{% url 'contact_search_list' %}">
-                            <span class="icon">
-                                <i class="ph ph-history"></i>
-                            </span>
-                            <span>Contact Search History</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="navbar-end">
-                <div class="navbar-item">
-                    <div class="buttons">
-                        <a class="button is-light">
-                            <span class="icon">
-                                <i class="ph ph-gear"></i>
-                            </span>
-                            <span>Settings</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Get all "navbar-burger" elements
-        const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-        
-        // Add a click event on each of them
-        $navbarBurgers.forEach( el => {
-            el.addEventListener('click', () => {
-                // Get the target from the "data-target" attribute
-                const target = el.dataset.target;
-                const $target = document.getElementById(target);
-                
-                // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-                el.classList.toggle('is-active');
-                $target.classList.toggle('is-active');
-            });
-        });
-    });
-</script>
+<nav>
+    <ul>
+      <li>
+        <h3>
+            <a href="{% url "home" %}" class="contrast"><i class="ph ph-database"></i> CRM</a>
+        </h3>
+    </li>
+    </ul>
+    <ul>
+        <li>
+            <a href="{% url 'company_list' %}" class="contrast"><i class="ph ph-buildings"></i> Companies</a>
+        </li>
+        <li>
+            <a href="{% url 'contact_list' %}" class="contrast"><i class="ph ph-users-three"></i> Contacts</a>
+        </li>
+        <li>
+            <a href="{% url 'pipeline' %}" class="contrast"><i class="ph ph-handshake"></i> Deals</a>
+        </li>
+        <li>
+            <a href="{% url 'company_search_list' %}" class="contrast"><i class="ph ph-magnifying-glass"></i> Finder</a>
+        </li>
+    </ul>
+  </nav>
