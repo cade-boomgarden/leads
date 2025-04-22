@@ -1,0 +1,23 @@
+<nav>
+    <ul>
+      <li>
+        <h3>
+            <a href="{% url "home" %}" class="contrast"><i class="ph ph-database"></i> CRM</a>
+        </h3>
+    </li>
+    </ul>
+    <ul>
+        <li>
+            <a href="{% url 'company_list' %}" class="contrast"><i class="ph ph-buildings"></i> Companies</a>
+        </li>
+        <li>
+            <a href="{% url 'contact_list' %}" class="contrast"><i class="ph ph-users-three"></i> Contacts</a>
+        </li>
+        <li>
+            <a href="{% url 'pipeline' %}" class="contrast"><i class="ph ph-handshake"></i> Deals</a>
+        </li>
+        <li>
+            <a href="{% url 'company_search_list' %}" class="contrast"><i class="ph ph-magnifying-glass"></i> Finder</a>
+        </li>
+    </ul>
+  </nav>

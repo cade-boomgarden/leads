@@ -1,486 +1,97 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}{{ contact.first_name }} {{ contact.last_name }}{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'contact_list' %}">
-            <i class="ph ph-users"></i> Contacts
-        </a>
-        <span class="divider">/</span>
-        <span>{{ contact.first_name }} {{ contact.last_name }}</span>
-    </div>
+    {% include "components/contacts/contacts_nav.html" %}
     
-    <h1>{{ contact.first_name }} {{ contact.last_name }}</h1>
-    
-    <div class="action-buttons">
-        <a href="{% url 'contact_update' contact.id %}" class="btn">
-            <i class="ph ph-pencil"></i> Edit
-        </a>
-        <a href="{% url 'deals:deal_create' contact.id %}" class="btn">
-            <i class="ph ph-currency-dollar"></i> Create Deal
-        </a>
-        <a href="{% url 'contact_delete' contact.id %}" class="btn btn-danger">
-            <i class="ph ph-trash"></i> Delete
-        </a>
-    </div>
-</div>
-
-<div class="contact-detail-container">
-    <div class="contact-info-card">
-        <div class="card-header">
-            <h2>Contact Information</h2>
-        </div>
+    <article>
+        <header>
+            <hgroup>
+                <h1>{{ contact.first_name }} {{ contact.last_name }}</h1>
+                <h2>{{ contact.position|default:"Contact" }}</h2>
+            </hgroup>
+            <nav>
+                <a href="{% url 'contact_update' contact.id %}" role="button">Edit</a>
+                <a href="{% url 'contact_delete' contact.id %}" role="button" class="danger">Delete</a>
+            </nav>
+        </header>
         
-        <div class="card-body">
-            <div class="info-group">
-                <div class="info-label">Email:</div>
-                <div class="info-value">{{ contact.email }}</div>
+        <div class="grid">
+            <div>
+                <h3>Contact Info</h3>
+                <dl>
+                    <dt>Email</dt>
+                    <dd>{{ contact.email }}</dd>
+                    <dt>Phone</dt>
+                    <dd>{{ contact.phone_number|default:"-" }}</dd>
+                    <dt>LinkedIn</dt>
+                    <dd>{{ contact.linkedin_url|urlize|default:"-" }}</dd>
+                    <dt>Twitter</dt>
+                    <dd>{{ contact.twitter|default:"-" }}</dd>
+                </dl>
             </div>
             
-            {% if contact.position %}
-            <div class="info-group">
-                <div class="info-label">Position:</div>
-                <div class="info-value">{{ contact.position }}</div>
-            </div>
-            {% endif %}
-            
-            {% if contact.phone_number %}
-            <div class="info-group">
-                <div class="info-label">Phone:</div>
-                <div class="info-value">{{ contact.phone_number }}</div>
-            </div>
-            {% endif %}
-            
-            <div class="info-group">
-                <div class="info-label">Company:</div>
-                <div class="info-value">
-                    {% if contact.company %}
-                    <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
-                    {% elif contact.organization_name %}
-                    {{ contact.organization_name }}
-                    {% else %}
-                    <em>Not specified</em>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="info-group">
-                <div class="info-label">Status:</div>
-                <div class="info-value">
-                    <span class="status-badge status-{{ contact.status }}">{{ contact.get_status_display }}</span>
-                </div>
-            </div>
-            
-            <div class="info-group">
-                <div class="info-label">Source:</div>
-                <div class="info-value">{{ contact.get_source_channel_display }}</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="contact-social-card">
-        <div class="card-header">
-            <h2>Social Profiles</h2>
-        </div>
-        <div class="card-body">
-            {% if contact.linkedin_url or contact.twitter %}
-            <ul class="social-links">
-                {% if contact.linkedin_url %}
-                <li>
-                    <a href="{{ contact.linkedin_url }}" target="_blank" class="social-link">
-                        <i class="ph ph-linkedin-logo"></i>
-                        <span>LinkedIn Profile</span>
-                    </a>
-                </li>
-                {% endif %}
-                
-                {% if contact.twitter %}
-                <li>
-                    <a href="https://twitter.com/{{ contact.twitter }}" target="_blank" class="social-link">
-                        <i class="ph ph-twitter-logo"></i>
-                        <span>@{{ contact.twitter }}</span>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-            {% else %}
-            <p class="no-social">No social profiles available.</p>
-            {% endif %}
-        </div>
-    </div>
-    
-    <div class="contact-lists-card">
-        <div class="card-header">
-            <h2>Contact Lists</h2>
-        </div>
-        <div class="card-body">
-            {% if contact_lists %}
-            <ul class="lists-container">
-                {% for list in contact_lists %}
-                <li>
-                    <a href="{% url 'contact_list_detail' list.id %}">{{ list.name }}</a>
-                    <span class="list-count">{{ list.contacts.count }} contacts</span>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="no-lists">This contact is not in any lists yet.</p>
-            {% endif %}
-        </div>
-    </div>
-    
-    <div class="contact-metadata-card">
-        <div class="card-header">
-            <h2>Additional Information</h2>
-        </div>
-        <div class="card-body">
-            <div class="info-group">
-                <div class="info-label">Created:</div>
-                <div class="info-value">{{ contact.created_at|date:"M d, Y H:i" }}</div>
-            </div>
-            
-            <div class="info-group">
-                <div class="info-label">Last Updated:</div>
-                <div class="info-value">{{ contact.updated_at|date:"M d, Y H:i" }}</div>
-            </div>
-            
-            {% if contact.last_activity_date %}
-            <div class="info-group">
-                <div class="info-label">Last Activity:</div>
-                <div class="info-value">{{ contact.last_activity_date|date:"M d, Y H:i" }}</div>
-            </div>
-            {% endif %}
-            
-            {% if contact.hunter_department %}
-            <div class="info-group">
-                <div class="info-label">Department:</div>
-                <div class="info-value">{{ contact.hunter_department }}</div>
-            </div>
-            {% endif %}
-            
-            {% if contact.hunter_seniority %}
-            <div class="info-group">
-                <div class="info-label">Seniority:</div>
-                <div class="info-value">{{ contact.hunter_seniority }}</div>
-            </div>
-            {% endif %}
-            
-            {% if contact.zerobounce_status %}
-            <div class="info-group">
-                <div class="info-label">Email Verification:</div>
-                <div class="info-value">
-                    <span class="email-status email-{{ contact.zerobounce_status }}">
-                        {{ contact.get_zerobounce_status_display }}
-                    </span>
-                    {% if contact.zerobounce_processed_at %}
-                    (checked on {{ contact.zerobounce_processed_at|date:"M d, Y" }})
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="contact-deals-card">
-        <div class="card-header">
-            <h2>Deals</h2>
-            <a href="{% url 'deals:deal_create' contact.id %}" class="btn btn-sm">
-                <i class="ph ph-plus"></i> Create Deal
-            </a>
-        </div>
-        <div class="card-body">
-            {% if contact.deals.all %}
-            <div class="deals-list">
-                {% for deal in contact.deals.all %}
-                <div class="deal-item">
-                    <div class="deal-info">
-                        <div class="deal-value">${{ deal.value|floatformat:2 }}</div>
-                        <div class="deal-stage">
-                            {% if deal.stage %}
-                            {{ deal.stage.name }}
-                            {% else %}
-                            <em>No stage</em>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="deal-status">
-                        {% if deal.is_won %}
-                        <span class="status-badge status-won">Won</span>
-                        {% elif deal.is_lost %}
-                        <span class="status-badge status-lost">Lost</span>
+            <div>
+                <h3>Organization</h3>
+                <dl>
+                    <dt>Company</dt>
+                    <dd>
+                        {% if contact.company %}
+                            <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
                         {% else %}
-                        <span class="status-badge status-active">Active</span>
+                            {{ contact.organization_name|default:"-" }}
                         {% endif %}
-                    </div>
-                    <div class="deal-actions">
-                        <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-sm">View</a>
-                    </div>
-                </div>
-                {% endfor %}
+                    </dd>
+                    <dt>Source</dt>
+                    <dd>{{ contact.get_source_channel_display }}</dd>
+                    <dt>Status</dt>
+                    <dd>{{ contact.get_status_display }}</dd>
+                </dl>
             </div>
-            {% else %}
-            <p class="no-deals">No deals yet for this contact. <a href="{% url 'deals:deal_create' contact.id %}">Create a deal</a> to get started.</p>
-            {% endif %}
         </div>
-    </div>
 
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .contact-detail-container {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    @media (min-width: 768px) {
-        .contact-detail-container {
-            grid-template-columns: 2fr 1fr;
-        }
-        
-        .contact-info-card {
-            grid-column: 1 / 2;
-        }
-        
-        .contact-social-card, 
-        .contact-lists-card, 
-        .contact-metadata-card {
-            grid-column: 2 / 3;
-        }
-    }
-    
-    .contact-info-card,
-    .contact-social-card,
-    .contact-lists-card,
-    .contact-metadata-card {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    
-    .card-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .card-header h2 {
-        margin: 0;
-        font-size: 1.2rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .info-group {
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .info-label {
-        font-weight: bold;
-        font-size: 0.9rem;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    .status-new {
-        background-color: #e3f2fd;
-        color: #0288d1;
-    }
-    
-    .status-sent {
-        background-color: #e8f5e9;
-        color: #388e3c;
-    }
-    
-    .status-replied {
-        background-color: #f9fbe7;
-        color: #afb42b;
-    }
-    
-    .status-unsubscribed {
-        background-color: #ffebee;
-        color: #d32f2f;
-    }
-    
-    .social-links {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .social-links li {
-        margin-bottom: 0.5rem;
-    }
-    
-    .social-link {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-decoration: none;
-    }
-    
-    .no-social,
-    .no-lists {
-        font-style: italic;
-        opacity: 0.7;
-    }
-    
-    .lists-container {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .lists-container li {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .lists-container li:last-child {
-        border-bottom: none;
-    }
-    
-    .list-count {
-        font-size: 0.8rem;
-        opacity: 0.7;
-    }
-    
-    .email-status {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    .email-valid {
-        background-color: #e8f5e9;
-        color: #388e3c;
-    }
-    
-    .email-invalid {
-        background-color: #ffebee;
-        color: #d32f2f;
-    }
-    
-    .email-catch-all,
-    .email-unknown {
-        background-color: #fff8e1;
-        color: #ff8f00;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    .contact-deals-card {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-top: 1.5rem;
-    }
-    
-    .card-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .deals-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .deal-item {
-        padding: 0.75rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .deal-item:last-child {
-        border-bottom: none;
-    }
-    
-    .deal-value {
-        font-weight: bold;
-    }
-    
-    .deal-stage {
-        font-size: 0.85rem;
-        color: #666;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-    }
-    
-    .status-active {
-        background-color: #e3f2fd;
-        color: #0288d1;
-    }
-    
-    .status-won {
-        background-color: #e8f5e9;
-        color: #388e3c;
-    }
-    
-    .status-lost {
-        background-color: #ffebee;
-        color: #d32f2f;
-    }
-    
-    .no-deals {
-        text-align: center;
-        padding: 1rem;
-        font-style: italic;
-        color: #666;
-    }
-</style>
+        <div class="grid">
+            <div>
+                <h3>Deals</h3>
+                {% if contact.deals.all %}
+                <table role="grid">
+                    <thead>
+                        <tr>
+                            <th>Value</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Expected Close</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for deal in contact.deals.all %}
+                        <tr>
+                            <td>${{ deal.value }}</td>
+                            <td>{{ deal.stage.name|default:"-" }}</td>
+                            <td>{{ deal.status }}</td>
+                            <td>{{ deal.estimated_close_date|date:"M d, Y"|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No associated deals</p>
+                {% endif %}
+                <p><a href="{% url 'deal_create' contact.id %}"><i class="ph ph-plus"></i> New Deal</a></p>
+            </div>
+            
+            <div>
+                <h3>Cohorts</h3>
+                {% if contact.cohorts.all %}
+                <ul>
+                    {% for cohort in contact.cohorts.all %}
+                    <li><a href="{% url 'cohort_detail' cohort.id %}">{{ cohort.name }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>Not in any cohorts</p>
+                {% endif %}
+            </div>
+        </div>
+    </article>
 {% endblock %}

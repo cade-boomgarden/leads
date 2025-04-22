@@ -1,5 +1,3 @@
-# finder/forms.py (update the existing file)
-
 from django import forms
 from finder.models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebScrapeParameters
 from companies.models import CompanyList
@@ -116,7 +114,7 @@ class WebScrapeForm(forms.Form):
     target_url = forms.URLField(
         label="Website URL",
         required=False,
-        widget=forms.URLInput(attrs={'placeholder': 'https://www.example.com'}),
+        widget=forms.URLInput(attrs={ 'placeholder': 'https://www.example.com'}),
         help_text="The company website URL to start scraping"
     )
     
@@ -124,6 +122,7 @@ class WebScrapeForm(forms.Form):
         label="Company List",
         queryset=CompanyList.objects.all(),
         required=False,
+        widget=forms.Select(attrs={'class': 'select is-fullwidth form-control'}),
         help_text="Select a list of companies to scrape"
     )
     
@@ -133,6 +132,7 @@ class WebScrapeForm(forms.Form):
         min_value=1,
         max_value=5,
         initial=2,
+        widget=forms.NumberInput(attrs={'class': 'input form-control'}),
         help_text="Maximum number of links to follow from the initial page (1-5)"
     )
     
@@ -141,6 +141,7 @@ class WebScrapeForm(forms.Form):
         min_value=1,
         max_value=500,
         initial=100,
+        widget=forms.NumberInput(attrs={'class': 'input form-control'}),
         help_text="Maximum number of pages to scrape per website"
     )
     
@@ -163,14 +164,14 @@ class WebScrapeForm(forms.Form):
     priority_paths = forms.CharField(
         label="Priority Paths",
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': '/about\n/team\n/contact'}),
+        widget=forms.Textarea(attrs={'class': 'textarea form-control', 'rows': 3, 'placeholder': '/about\n/team\n/contact'}),
         help_text="Enter URL paths to prioritize, one per line (e.g., '/about', '/team')"
     )
     
     exclude_paths = forms.CharField(
         label="Exclude Paths",
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': '/blog\n/products\n/privacy'}),
+        widget=forms.Textarea(attrs={'class': 'textarea form-control', 'rows': 3, 'placeholder': '/blog\n/products\n/privacy'}),
         help_text="Enter URL paths to exclude, one per line (e.g., '/blog', '/products')"
     )
     
@@ -178,7 +179,7 @@ class WebScrapeForm(forms.Form):
     target_keywords = forms.CharField(
         label="Target Keywords",
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'contact\nteam\npeople\nstaff'}),
+        widget=forms.Textarea(attrs={'class': 'textarea form-control', 'rows': 3, 'placeholder': 'contact\nteam\npeople\nstaff'}),
         help_text="Enter keywords that suggest a page may contain contact information, one per line"
     )
     
@@ -210,7 +211,7 @@ class WebScrapeForm(forms.Form):
         min_value=0.5,
         max_value=10.0,
         initial=1.0,
-        widget=forms.NumberInput(attrs={'step': '0.1'}),
+        widget=forms.NumberInput(attrs={ 'step': '0.1'}),
         help_text="Delay between requests in seconds (to avoid overloading the server)"
     )
     
@@ -219,6 +220,7 @@ class WebScrapeForm(forms.Form):
         min_value=1,
         max_value=20,
         initial=5,
+        widget=forms.NumberInput(attrs={'class': 'input form-control'}),
         help_text="Number of concurrent requests"
     )
     

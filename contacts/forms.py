@@ -8,8 +8,8 @@ class ContactListForm(forms.ModelForm):
         model = ContactList
         fields = ['name', 'description']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'name': forms.TextInput(),
+            'description': forms.Textarea(attrs={'rows': 4}),
         }
 
 class ContactForm(forms.ModelForm):
@@ -21,17 +21,17 @@ class ContactForm(forms.ModelForm):
             'status', 'source_channel'
         ]
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'position': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'company': forms.Select(attrs={'class': 'form-control'}),
-            'organization_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'linkedin_url': forms.URLInput(attrs={'class': 'form-control'}),
-            'twitter': forms.TextInput(attrs={'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
-            'source_channel': forms.Select(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(),
+            'last_name': forms.TextInput(),
+            'email': forms.EmailInput(),
+            'position': forms.TextInput(),
+            'phone_number': forms.TextInput(),
+            'company': forms.Select(),
+            'organization_name': forms.TextInput(),
+            'linkedin_url': forms.URLInput(),
+            'twitter': forms.TextInput(),
+            'status': forms.Select(),
+            'source_channel': forms.Select(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -48,28 +48,35 @@ class ContactForm(forms.ModelForm):
 class ContactFilterForm(forms.Form):
     name = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by name'})
+        widget=forms.TextInput(attrs={'placeholder': 'Filter by name'})
     )
     
     email = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by email'})
+        widget=forms.TextInput(attrs={'placeholder': 'Filter by email'})
     )
     
     company = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by company'})
+        widget=forms.TextInput(attrs={'placeholder': 'Filter by company'})
     )
     
     position = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by position'})
+        widget=forms.TextInput(attrs={'placeholder': 'Filter by position'})
+    )
+    
+    zerobounce_status = forms.ChoiceField(
+        choices=[('', 'All Verification')] + list(Contact.EmailStatus.choices),
+        required=False,
+        label="Verification Status",
+        widget=forms.Select(attrs={'aria-label': 'Filter by verification status'})
     )
     
     status = forms.ChoiceField(
         choices=[('', 'All Statuses')] + list(Contact.ContactStatus.choices),
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select()
     )
 
 class ContactListAddForm(forms.Form):
@@ -88,26 +95,22 @@ class CohortForm(forms.ModelForm):
             'job_title_keywords'
         ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'company_list': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(),
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'company_list': forms.Select(),
             'selection_method': forms.RadioSelect(),
             'email_prefix_hierarchy': forms.Textarea(attrs={
-                'class': 'form-control', 
                 'rows': 3, 
                 'placeholder': 'Enter one prefix per line (e.g., sales\ninfo\ncontact)'
             }),
             'target_department': forms.TextInput(attrs={
-                'class': 'form-control',
                 'placeholder': 'e.g., Marketing, Sales, IT'
             }),
             'minimum_seniority': forms.NumberInput(attrs={
-                'class': 'form-control',
                 'min': 0,
                 'max': 10
             }),
             'job_title_keywords': forms.Textarea(attrs={
-                'class': 'form-control', 
                 'rows': 3, 
                 'placeholder': 'Enter one keyword per line (e.g., sales\nmarketing\nbusiness development)'
             }),

@@ -1,171 +1,44 @@
 {% extends 'base.html' %}
-
-{% block title %}CRM - Home{% endblock %}
-
 {% block content %}
-<div class="hero-section">
-    <h1>Welcome to your CRM</h1>
-    <p>Manage your companies, contacts, and deals all in one place</p>
-</div>
-
-<div class="dashboard-container">
-    <div class="dashboard-grid">
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="ph ph-buildings"></i>
-            </div>
-            <div class="card-content">
-                <h2>Companies</h2>
-                <p>Manage your company database</p>
-                <div class="card-actions">
-                    <a href="{% url 'company_list' %}" class="btn">View All Companies</a>
-                    <a href="{% url 'company_list_list' %}" class="btn btn-secondary">Manage Lists</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="ph ph-users"></i>
-            </div>
-            <div class="card-content">
-                <h2>Contacts</h2>
-                <p>Keep track of your business contacts</p>
-                <div class="card-actions">
-                    <a href="{% url 'contact_list' %}" class="btn">View All Contacts</a>
-                    <a href="{% url 'contact_list_list' %}" class="btn btn-secondary">Manage Lists</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="ph ph-users-three"></i>
-            </div>
-            <div class="card-content">
-                <h2>Cohorts</h2>
-                <p>Create targeted contact lists</p>
-                <div class="card-actions">
-                    <a href="{% url 'cohort_list' %}" class="btn">View All Cohorts</a>
-                    <a href="{% url 'cohort_create' %}" class="btn btn-secondary">Create Cohort</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="ph ph-currency-dollar"></i>
-            </div>
-            <div class="card-content">
-                <h2>Deals</h2>
-                <p>Track potential sales and opportunities</p>
-                <div class="card-actions">
-                    <a href="#" class="btn">View All Deals</a>
-                    <a href="#" class="btn btn-secondary">Deal Pipeline</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="ph ph-magnifying-glass"></i>
-            </div>
-            <div class="card-content">
-                <h2>Find New Leads</h2>
-                <p>Search for new companies and contacts</p>
-                <div class="card-actions">
-                    <a href="{% url 'serpapi_search' %}" class="btn">New Business Search</a>
-                    <a href="{% url 'search_list' %}" class="btn btn-secondary">View Past Searches</a>
-                </div>
-            </div>
-        </div>
+<div class="grid">
+    <div>
+        <article>
+            <header>
+                <h4>
+                    <i class="ph ph-buildings"></i> Companies
+                </h4>
+            </header>
+            {{ companies_count }} companies
+            <footer>
+                <a href="{% url 'company_list' %}">View all</a>
+            </footer>
+        </article>
+    </div>
+    <div>
+        <article>
+            <header>
+                <h4>
+                    <i class="ph ph-users-three"></i> Contacts
+                </h4>
+            </header>
+            {{ contacts_count }} contacts
+            <footer>
+                <a href="{% url 'contact_list' %}">View all</a>
+            </footer>
+        </article>
+    </div>
+    <div>
+        <article>
+            <header>
+                <h4>
+                    <i class="ph ph-handshake"></i> Deals
+                </h4>
+            </header>
+            {{ deals_count }} deals
+            <footer>
+                <a href="{% url 'pipeline' %}">View all</a>
+            </footer>
+        </article>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Override Water.css container width for all pages */
-    :root {
-        --content-width: 90%;
-        --max-content-width: 1600px;
-    }
-    
-    body {
-        max-width: var(--max-content-width);
-    }
-
-    .hero-section {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    
-    .hero-section h1 {
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Container for the grid to enable proper centering */
-    .dashboard-container {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 350px));
-        gap: 1.5rem;
-        max-width: 1600px;
-        justify-content: center;
-    }
-    
-    .dashboard-card {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .card-icon {
-        background-color: var(--background-alt);
-        padding: 1.5rem;
-        text-align: center;
-        font-size: 2.5rem;
-    }
-    
-    .card-content {
-        padding: 1.5rem;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .card-content h2 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-        text-align: center;
-    }
-    
-    .card-content p {
-        margin-bottom: 1.5rem;
-        text-align: center;
-        flex-grow: 1;
-    }
-    
-    .card-actions {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
+{% endblock content %}

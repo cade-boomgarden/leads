@@ -1,51 +1,23 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Deal Stages{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'deals:deal_list' %}">
-            <i class="ph ph-currency-dollar"></i> Deals
-        </a>
-        <span class="divider">/</span>
-        <span>Deal Stages</span>
-    </div>
+    {% include "components/deals/deals_nav.html" %}
     
-    <h1>Deal Stages</h1>
-    <p>Manage your deal pipeline stages</p>
-    
-    <div class="action-buttons">
-        <a href="{% url 'deals:stage_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Create Stage
-        </a>
-        <a href="{% url 'deals:pipeline' %}" class="btn btn-secondary">
-            <i class="ph ph-chart-line-up"></i> View Pipeline
-        </a>
-    </div>
-</div>
-
-<div class="info-box">
-    <div class="info-icon">
-        <i class="ph ph-info"></i>
-    </div>
-    <div class="info-content">
-        <h3>About Deal Stages</h3>
-        <p>Deal stages represent the steps in your sales process. Each stage has a conversion probability that determines the expected value of deals in that stage.</p>
-        <p>Stages are displayed in the pipeline view in the order defined below.</p>
-    </div>
-</div>
-
-<div class="stages-container">
-    {% if stages %}
-    <div class="table-container">
-        <table class="stages-table">
+    <article>
+        <header>
+            <hgroup>
+                <h1>Deal Stages</h1>
+                <a href="{% url 'stage_create' %}" role="button">Create Stage</a>
+            </hgroup>
+        </header>
+        
+        <table role="grid">
             <thead>
                 <tr>
+                    <th>Stage</th>
                     <th>Order</th>
-                    <th>Stage Name</th>
-                    <th>Description</th>
-                    <th>Conversion Probability</th>
+                    <th>Probability</th>
                     <th>Active Deals</th>
                     <th>Actions</th>
                 </tr>
@@ -53,266 +25,21 @@
             <tbody>
                 {% for stage in stages %}
                 <tr>
+                    <td><a href="{% url 'stage_detail' stage.id %}">{{ stage.name }}</a></td>
                     <td>{{ stage.order }}</td>
-                    <td><a href="{% url 'deals:stage_detail' stage.id %}">{{ stage.name }}</a></td>
-                    <td>{{ stage.description|default:"-"|truncatechars:50 }}</td>
-                    <td>{{ stage.conversion_probability|floatformat:2 }}</td>
-                    <td>{{ stage.deals.filter.count }}</td>
-                    <td class="actions-cell">
-                        <a href="{% url 'deals:stage_detail' stage.id %}" class="btn btn-sm" title="View Details">
-                            <i class="ph ph-info"></i>
-                        </a>
-                        <a href="{% url 'deals:stage_update' stage.id %}" class="btn btn-sm" title="Edit">
-                            <i class="ph ph-pencil"></i>
-                        </a>
-                        <a href="{% url 'deals:stage_delete' stage.id %}" class="btn btn-sm btn-danger" title="Delete">
-                            <i class="ph ph-trash"></i>
-                        </a>
+                    <td>{{ stage.conversion_probability|floatformat:"0" }}%</td>
+                    <td>{{ stage.deals.count }}</td>
+                    <td>
+                        <a href="{% url 'stage_update' stage.id %}" class="secondary">Edit</a>
+                        <a href="{% url 'stage_delete' stage.id %}" class="contrast">Delete</a>
                     </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No stages created</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <i class="ph ph-folders"></i>
-        <p>No deal stages defined yet.</p>
-        <p>Create stages to organize your sales pipeline.</p>
-        <a href="{% url 'deals:stage_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Create Your First Stage
-        </a>
-    </div>
-    {% endif %}
-</div>
-
-<div class="stage-example-section">
-    <h2>Recommended Deal Stages</h2>
-    <p>Here's a common sales pipeline structure you can use as a starting point:</p>
-    
-    <div class="example-stages">
-        <div class="example-stage">
-            <div class="example-order">1</div>
-            <div class="example-content">
-                <h3>Lead</h3>
-                <p>Initial contact or prospect</p>
-                <p class="example-probability">10% probability</p>
-            </div>
-        </div>
-        
-        <div class="example-stage">
-            <div class="example-order">2</div>
-            <div class="example-content">
-                <h3>Qualification</h3>
-                <p>Assessing if the prospect is a good fit</p>
-                <p class="example-probability">20% probability</p>
-            </div>
-        </div>
-        
-        <div class="example-stage">
-            <div class="example-order">3</div>
-            <div class="example-content">
-                <h3>Needs Analysis</h3>
-                <p>Understanding the prospect's needs</p>
-                <p class="example-probability">40% probability</p>
-            </div>
-        </div>
-        
-        <div class="example-stage">
-            <div class="example-order">4</div>
-            <div class="example-content">
-                <h3>Proposal</h3>
-                <p>Proposal or quote presented</p>
-                <p class="example-probability">60% probability</p>
-            </div>
-        </div>
-        
-        <div class="example-stage">
-            <div class="example-order">5</div>
-            <div class="example-content">
-                <h3>Negotiation</h3>
-                <p>Working out final details</p>
-                <p class="example-probability">80% probability</p>
-            </div>
-        </div>
-        
-        <div class="example-stage">
-            <div class="example-order">6</div>
-            <div class="example-content">
-                <h3>Closing</h3>
-                <p>Final commitment stage</p>
-                <p class="example-probability">90% probability</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .info-box {
-        display: flex;
-        gap: 1rem;
-        background-color: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        border-radius: 4px;
-        padding: 1.25rem;
-        margin: 1.5rem 0;
-    }
-    
-    .info-icon {
-        color: #2196f3;
-        font-size: 2rem;
-        flex-shrink: 0;
-    }
-    
-    .info-content h3 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
-    }
-    
-    .info-content p {
-        margin: 0.5rem 0;
-    }
-    
-    .stages-container {
-        margin-bottom: 2rem;
-    }
-    
-    .table-container {
-        overflow-x: auto;
-    }
-    
-    .stages-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .stages-table th,
-    .stages-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .stages-table th {
-        background-color: var(--background-alt);
-        font-weight: bold;
-    }
-    
-    .stages-table tr:hover {
-        background-color: rgba(0, 0, 0, 0.02);
-    }
-    
-    .actions-cell {
-        white-space: nowrap;
-        display: flex;
-        gap: 0.25rem;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1.5rem;
-        background-color: var(--background-alt);
-        border-radius: 6px;
-        margin-bottom: 2rem;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    .empty-state p {
-        margin: 0.5rem 0;
-    }
-    
-    .empty-state .btn {
-        margin-top: 1rem;
-    }
-    
-    .stage-example-section h2 {
-        margin-bottom: 1rem;
-    }
-    
-    .example-stages {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .example-stage {
-        background-color: var(--background-alt);
-        border-radius: 6px;
-        overflow: hidden;
-        display: flex;
-    }
-    
-    .example-order {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        width: 50px;
-        background-color: rgba(0, 0, 0, 0.05);
-    }
-    
-    .example-content {
-        padding: 1rem;
-        flex-grow: 1;
-    }
-    
-    .example-content h3 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
-    }
-    
-    .example-content p {
-        margin: 0.25rem 0;
-        font-size: 0.9rem;
-    }
-    
-    .example-probability {
-        font-weight: bold;
-        color: var(--links);
-        margin-top: 0.5rem !important;
-    }
-</style>
+    </article>
 {% endblock %}

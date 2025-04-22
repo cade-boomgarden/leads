@@ -1,296 +1,33 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ title|default:"Contact Form" }}{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'contact_list' %}">
-            <i class="ph ph-users"></i> Contacts
-        </a>
-        <span class="divider">/</span>
-        {% if contact %}
-        <a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a>
-        <span class="divider">/</span>
-        <span>Edit</span>
-        {% else %}
-        <span>Create New Contact</span>
-        {% endif %}
-    </div>
+    {% include "components/contacts/contacts_nav.html" %}
     
-    <h1>{{ title }}</h1>
-</div>
-
-<div class="form-container">
-    <form method="post">
-        {% csrf_token %}
+    <article>
+        <header>
+            <h1>{{ title }}</h1>
+        </header>
         
-        {% if form.non_field_errors %}
-        <div class="form-errors">
-            {% for error in form.non_field_errors %}
-            <p class="error">{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <div class="form-section">
-            <h2>Basic Information</h2>
+        <form method="post">
+            {% csrf_token %}
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.first_name.id_for_label }}">First Name*</label>
-                    {{ form.first_name }}
-                    {% if form.first_name.errors %}
-                    <div class="field-errors">
-                        {% for error in form.first_name.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.last_name.id_for_label }}">Last Name*</label>
-                    {{ form.last_name }}
-                    {% if form.last_name.errors %}
-                    <div class="field-errors">
-                        {% for error in form.last_name.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}">Email*</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                    <div class="field-errors">
-                        {% for error in form.email.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
-                    {{ form.phone_number }}
-                    {% if form.phone_number.errors %}
-                    <div class="field-errors">
-                        {% for error in form.phone_number.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.position.id_for_label }}">Position/Title</label>
-                {{ form.position }}
-                {% if form.position.errors %}
-                <div class="field-errors">
-                    {% for error in form.position.errors %}
-                    <p class="error">{{ error }}</p>
+            <div class="grid">
+                {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% for error in field.errors %}
+                    <p role="alert">{{ error }}</p>
                     {% endfor %}
                 </div>
-                {% endif %}
+                {% endfor %}
             </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Company Information</h2>
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.company.id_for_label }}">Company</label>
-                    {{ form.company }}
-                    {% if form.company.errors %}
-                    <div class="field-errors">
-                        {% for error in form.company.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    <small class="help-text">Select from existing companies in the database</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.organization_name.id_for_label }}">Organization Name</label>
-                    {{ form.organization_name }}
-                    {% if form.organization_name.errors %}
-                    <div class="field-errors">
-                        {% for error in form.organization_name.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    <small class="help-text">If company not in database, enter name here</small>
-                </div>
+            <div role="group">
+                <button type="submit">{{ submit_text }}</button>
+                <a href="{% if contact %}{% url 'contact_detail' contact.id %}{% else %}{% url 'contact_list' %}{% endif %}" role="button">Cancel</a>
             </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Social Profiles</h2>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.linkedin_url.id_for_label }}">LinkedIn URL</label>
-                    {{ form.linkedin_url }}
-                    {% if form.linkedin_url.errors %}
-                    <div class="field-errors">
-                        {% for error in form.linkedin_url.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.twitter.id_for_label }}">Twitter Handle</label>
-                    {{ form.twitter }}
-                    {% if form.twitter.errors %}
-                    <div class="field-errors">
-                        {% for error in form.twitter.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    <small class="help-text">Without @ symbol (e.g., 'johndoe')</small>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Status</h2>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="{{ form.status.id_for_label }}">Contact Status</label>
-                    {{ form.status }}
-                    {% if form.status.errors %}
-                    <div class="field-errors">
-                        {% for error in form.status.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.source_channel.id_for_label }}">Source Channel</label>
-                    {{ form.source_channel }}
-                    {% if form.source_channel.errors %}
-                    <div class="field-errors">
-                        {% for error in form.source_channel.errors %}
-                        <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-actions">
-            <button type="submit" class="btn">{{ submit_text }}</button>
-            {% if contact %}
-            <a href="{% url 'contact_detail' contact.id %}" class="btn btn-secondary">Cancel</a>
-            {% else %}
-            <a href="{% url 'contact_list' %}" class="btn btn-secondary">Cancel</a>
-            {% endif %}
-        </div>
-    </form>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .form-container {
-        margin-top: 1.5rem;
-    }
-    
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .form-section:last-child {
-        border-bottom: none;
-    }
-    
-    .form-section h2 {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-    }
-    
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    @media (min-width: 768px) {
-        .form-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: bold;
-    }
-    
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-        width: 100%;
-    }
-    
-    .form-errors,
-    .field-errors {
-        background-color: #ffebee;
-        border: 1px solid #ef9a9a;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .error {
-        color: #c62828;
-        margin: 0.25rem 0;
-    }
-    
-    .help-text {
-        display: block;
-        margin-top: 0.25rem;
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    .form-actions {
-        margin-top: 2rem;
-        display: flex;
-        gap: 1rem;
-    }
-</style>
+        </form>
+    </article>
 {% endblock %}

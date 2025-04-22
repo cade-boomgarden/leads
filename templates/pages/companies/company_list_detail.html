@@ -1,424 +1,62 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}{{ company_list.name }}{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'company_list_list' %}">
-            <i class="ph ph-list-bullets"></i> Company Lists
-        </a>
-        <span class="divider">/</span>
-        <span>{{ company_list.name }}</span>
-    </div>
+    {% include "components/companies/companies_nav.html" %}
     
-    <h1>{{ company_list.name }}</h1>
-    {% if company_list.description %}
-    <p class="list-description">{{ company_list.description }}</p>
-    {% endif %}
-    
-    <div class="list-meta">
-        <div class="meta-item">
-            <i class="ph ph-buildings"></i>
-            <span>{{ companies.paginator.count }} companies</span>
-        </div>
+    <article>
+        <header>
+            <hgroup>
+                <h1>{{ company_list.name }}</h1>
+                <h2>{{ company_list.description }}</h2>
+            </hgroup>
+            <nav>
+                <a href="{% url 'company_list_add_companies' company_list.id %}" role="button">Add Companies</a>
+                <a href="{% url 'company_list_export' company_list.id %}" role="button">Export</a>
+                <a href="{% url 'company_list_update' company_list.id %}" role="button">Edit</a>
+                <a href="{% url 'company_list_delete' company_list.id %}" role="button" class="danger">Delete</a>
+            </nav>
+        </header>
         
-        <div class="meta-item">
-            <i class="ph ph-clock"></i>
-            <span>Created: {{ company_list.created_at|date:"M d, Y" }}</span>
-        </div>
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies %}
+                <tr>
+                    <td><a href="{% url 'company_detail' company.id %}">{{ company.name }}</a></td>
+                    <td>{{ company.city|default:"-" }}</td>
+                    <td>{{ company.primary_type|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'company_list_remove_company' company_list.id company.id %}" class="contrast">Remove</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No companies in this list</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         
-        <div class="meta-item">
-            <i class="ph ph-arrows-clockwise"></i>
-            <span>Updated: {{ company_list.updated_at|date:"M d, Y" }}</span>
-        </div>
-    </div>
-    
-    <div class="action-buttons">
-        <a href="{% url 'company_list_update' company_list.id %}" class="btn">
-            <i class="ph ph-pencil"></i> Edit List
-        </a>
-        <a href="{% url 'company_list_add_companies' company_list.id %}" class="btn">
-            <i class="ph ph-plus"></i> Add Companies
-        </a>
-        <a href="{% url 'company_list_export' company_list.id %}" class="btn">
-            <i class="ph ph-file-csv"></i> Export to CSV
-        </a>
-        <a href="{% url 'company_list_delete' company_list.id %}" class="btn btn-danger">
-            <i class="ph ph-trash"></i> Delete List
-        </a>
-    </div>
-</div>
-
-{% if searches %}
-<div class="add-from-search-section">
-    <h2>Add Companies from Search Results</h2>
-    <div class="search-results-container">
-        {% for search in searches %}
-        <div class="search-result-item">
-            <div class="search-result-info">
-                <div class="search-id">Search #{{ search.id }}</div>
-                <div class="search-meta">
-                    <span class="search-date">{{ search.created_at|date:"M d, Y" }}</span>
-                    <span class="search-count">{{ search.results_count }} companies</span>
-                </div>
-                {% if search.serpapi_parameters %}
-                <div class="search-query">
-                    <strong>Query:</strong> {{ search.serpapi_parameters.query }}
-                    {% if search.serpapi_parameters.place_name %}
-                    in {{ search.serpapi_parameters.place_name }}
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-            <a href="{% url 'company_list_add_search_results' company_list.id search.id %}" class="btn btn-sm">
-                <i class="ph ph-plus"></i> Add All
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-
-<div class="companies-section">
-    <h2>Companies in this List</h2>
-    
-    {% if companies %}
-    <div class="company-grid">
-        {% for company in companies %}
-        <div class="company-card">
-            <div class="company-card-header">
-                <h3>{{ company.name }}</h3>
-                {% if company.rating %}
-                <div class="company-rating">
-                    <span class="rating-value">{{ company.rating }}</span>
-                    <i class="ph ph-star"></i>
-                    {% if company.reviews_count %}
-                    <span class="reviews-count">({{ company.reviews_count }})</span>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="company-card-body">
-                {% if company.primary_type %}
-                <div class="company-info">
-                    <i class="ph ph-tag"></i>
-                    <span>{{ company.primary_type }}</span>
-                </div>
+        {% if companies.paginator.num_pages > 1 %}
+        <nav>
+            <ul>
+                {% if companies.has_previous %}
+                <li><a href="?page={{ companies.previous_page_number }}">Previous</a></li>
                 {% endif %}
                 
-                {% if company.address %}
-                <div class="company-info">
-                    <i class="ph ph-map-pin"></i>
-                    <span>
-                        {{ company.address }}
-                        {% if company.city %}
-                        <br>{{ company.city }}{% if company.state %}, {{ company.state }}{% endif %}
-                        {% endif %}
-                    </span>
-                </div>
+                {% if companies.has_next %}
+                <li><a href="?page={{ companies.next_page_number }}">Next</a></li>
                 {% endif %}
-                
-                {% if company.phone %}
-                <div class="company-info">
-                    <i class="ph ph-phone"></i>
-                    <span>{{ company.phone }}</span>
-                </div>
-                {% endif %}
-                
-                {% if company.website_url %}
-                <div class="company-info">
-                    <i class="ph ph-globe"></i>
-                    <a href="{{ company.website_url }}" target="_blank">{{ company.domain }}</a>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="company-card-footer">
-                <a href="{% url 'company_detail' company.id %}" class="btn btn-sm">View Details</a>
-                <form method="post" action="{% url 'company_list_remove_company' company_list.id company.id %}" class="remove-form" onsubmit="return confirm('Remove {{ company.name }} from this list?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger">
-                        <i class="ph ph-x"></i> Remove
-                    </button>
-                </form>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    {% if companies.has_other_pages %}
-    <div class="pagination">
-        <span class="pagination-info">
-            Page {{ companies.number }} of {{ companies.paginator.num_pages }}
-        </span>
-        
-        <div class="pagination-controls">
-            {% if companies.has_previous %}
-            <a href="?page=1" class="btn btn-sm">
-                <i class="ph ph-caret-double-left"></i>
-            </a>
-            <a href="?page={{ companies.previous_page_number }}" class="btn btn-sm">
-                <i class="ph ph-caret-left"></i>
-            </a>
-            {% endif %}
-            
-            {% for num in companies.paginator.page_range %}
-                {% if companies.number == num %}
-                <span class="current-page">{{ num }}</span>
-                {% elif num > companies.number|add:'-3' and num < companies.number|add:'3' %}
-                <a href="?page={{ num }}" class="btn btn-sm">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-            
-            {% if companies.has_next %}
-            <a href="?page={{ companies.next_page_number }}" class="btn btn-sm">
-                <i class="ph ph-caret-right"></i>
-            </a>
-            <a href="?page={{ companies.paginator.num_pages }}" class="btn btn-sm">
-                <i class="ph ph-caret-double-right"></i>
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    
-    {% else %}
-    <div class="empty-state">
-        <i class="ph ph-building"></i>
-        <p>This list doesn't have any companies yet.</p>
-        <div class="empty-actions">
-            <a href="{% url 'company_list_add_companies' company_list.id %}" class="btn">
-                <i class="ph ph-plus"></i> Add Companies
-            </a>
-            {% if searches %}
-            <a href="#add-from-search" class="btn btn-secondary">
-                <i class="ph ph-magnifying-glass"></i> Add from Search Results
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .list-description {
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
-        max-width: 800px;
-    }
-    
-    .list-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.9rem;
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .add-from-search-section {
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .add-from-search-section h2 {
-        margin-top: 0;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-    
-    .search-results-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-    }
-    
-    .search-result-item {
-        background-color: var(--background);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .search-id {
-        font-weight: bold;
-        margin-bottom: 0.25rem;
-    }
-    
-    .search-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .search-query {
-        font-size: 0.9rem;
-    }
-    
-    .companies-section {
-        margin-top: 2rem;
-    }
-    
-    .companies-section h2 {
-        margin-bottom: 1rem;
-    }
-    
-    .company-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-    }
-    
-    .company-card {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .company-card-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    }
-    
-    .company-card-header h3 {
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    
-    .company-rating {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-    
-    .rating-value {
-        font-weight: bold;
-    }
-    
-    .reviews-count {
-        font-size: 0.8rem;
-        opacity: 0.8;
-    }
-    
-    .company-card-body {
-        padding: 1rem;
-        flex-grow: 1;
-    }
-    
-    .company-info {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    .company-info i {
-        flex-shrink: 0;
-        margin-top: 0.2rem;
-    }
-    
-    .company-card-footer {
-        padding: 0.75rem 1rem;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    .empty-actions {
-        margin-top: 1rem;
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-    }
-    
-    .pagination {
-        margin-top: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .pagination-controls {
-        display: flex;
-        gap: 0.25rem;
-    }
-    
-    .current-page {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        background-color: var(--links);
-        color: white;
-        border-radius: 4px;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    
-    .remove-form {
-        display: inline;
-    }
-</style>
+            </ul>
+        </nav>
+        {% endif %}
+    </article>
 {% endblock %}

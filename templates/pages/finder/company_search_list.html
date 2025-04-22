@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Contact Searches{% endblock %}
+{% block title %}Company Searches{% endblock %}
 
 {% block content %}
     {% include "components/finder/finder_nav.html" %}
@@ -7,8 +7,8 @@
     <article>
         <header>
             <hgroup>
-                <h1>Contact Searches</h1>
-                <a href="{% url 'webscrape_search' %}" role="secondary"><i class="ph ph-plus"></i> New Search</a>
+                <h1>Company Searches</h1>
+                <a href="{% url 'serpapi_search' %}" role="secondary"><i class="ph ph-plus"></i> New Search</a>
             </hgroup>
         </header>
         
@@ -26,9 +26,9 @@
                 <tr>
                     <td>{{ search.get_method_display }}</td>
                     <td>{{ search.created_at|date:"M d, Y H:i" }}</td>
-                    <td>{{ search.results_count }} contacts</td>
+                    <td>{{ search.results_count }} companies</td>
                     <td>
-                        <a href="{% url 'contact_search_detail' search.id %}" class="secondary">View</a>
+                        <a href="{% url 'company_search_detail' search.id %}" class="secondary">View</a>
                     </td>
                 </tr>
                 {% empty %}

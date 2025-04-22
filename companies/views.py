@@ -9,12 +9,43 @@ import csv
 from .models import Company, CompanyList
 from .forms import CompanyForm, CompanyListForm, CompanyFilterForm, CompanyListAddForm
 from finder.models import CompanySearch
+from contacts.models import Contact
+from deals.models import Deal
+from finder.models import ContactSearch
 
 def home(request):
     """
-    Render the home page.
+    Render the home page with dashboard stats and recent activity.
     """
-    return render(request, 'pages/home.html')
+    # Get counts for dashboard stats
+    companies_count = Company.objects.count()
+    contacts_count = Contact.objects.count()
+    deals_count = Deal.objects.count()
+    
+    # Calculate pipeline value
+    active_deals = Deal.objects.filter(is_won=False, is_lost=False)
+    pipeline_value = sum(deal.expected_value for deal in active_deals)
+    
+    # Get recent company searches (last 5)
+    recent_company_searches = CompanySearch.objects.all().order_by('-created_at')[:5]
+    
+    # Get recent contact searches (last 5)
+    recent_contact_searches = ContactSearch.objects.all().order_by('-created_at')[:5]
+    
+    # Get recent deals (last 5)
+    recent_deals = Deal.objects.all().order_by('-created_at')[:5]
+    
+    context = {
+        'companies_count': companies_count,
+        'contacts_count': contacts_count, 
+        'deals_count': deals_count,
+        'pipeline_value': pipeline_value,
+        'recent_company_searches': recent_company_searches,
+        'recent_contact_searches': recent_contact_searches,
+        'recent_deals': recent_deals,
+    }
+    
+    return render(request, 'pages/home.html', context)
 
 # Company List Views
 def company_list_list(request):
@@ -368,10 +399,13 @@ def company_detail(request, company_id):
     
     # Get all lists this company is in
     company_lists = company.company_lists.all()
+
+    deals = Deal.objects.filter(contact__company=company).order_by('-created_at')
     
     return render(request, 'pages/companies/company_detail.html', {
         'company': company,
-        'company_lists': company_lists
+        'company_lists': company_lists,
+        'deals': deals
     })
 
 def company_create(request):

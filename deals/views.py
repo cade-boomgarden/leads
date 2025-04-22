@@ -159,7 +159,7 @@ def deal_create(request, contact_id=None):
         if form.is_valid():
             deal = form.save()
             messages.success(request, f"Deal for {deal.contact} created successfully!")
-            return redirect('deals:deal_detail', deal_id=deal.id)
+            return redirect('deal_detail', deal_id=deal.id)
     else:
         # Pre-fill the contact if provided
         initial_data = {}
@@ -174,7 +174,7 @@ def deal_create(request, contact_id=None):
     
     context = {
         'form': form,
-        'title': 'Create Deal' if not contact else f'Create Deal for {contact.first_name} {contact.last_name}',
+        'title': 'Create Deal' if not contact else f'Create Deal for {contact.first_name} {contact.last_name} ({contact.email})',
         'submit_text': 'Create Deal',
     }
     
@@ -192,7 +192,7 @@ def deal_update(request, deal_id):
         if form.is_valid():
             form.save()
             messages.success(request, f"Deal updated successfully!")
-            return redirect('deals:deal_detail', deal_id=deal.id)
+            return redirect('deal_detail', deal_id=deal.id)
     else:
         form = DealForm(instance=deal)
     
@@ -211,7 +211,7 @@ def deal_delete(request, deal_id):
         contact_name = deal.contact.first_name + " " + deal.contact.last_name if deal.contact else "Unknown"
         deal.delete()
         messages.success(request, f"Deal for {contact_name} deleted successfully!")
-        return redirect('deals:deal_list')
+        return redirect('deal_list')
     
     return render(request, 'pages/deals/deal_confirm_delete.html', {
         'deal': deal,
@@ -224,9 +224,9 @@ def deal_mark_as_won(request, deal_id):
     if request.method == 'POST':
         deal.mark_as_won()
         messages.success(request, f"Deal marked as won successfully!")
-        return redirect('deals:deal_detail', deal_id=deal.id)
+        return redirect('deal_detail', deal_id=deal.id)
     
-    return redirect('deals:deal_detail', deal_id=deal.id)
+    return redirect('deal_detail', deal_id=deal.id)
 
 def deal_mark_as_lost(request, deal_id):
     """View for marking a deal as lost"""
@@ -236,7 +236,7 @@ def deal_mark_as_lost(request, deal_id):
         reason = request.POST.get('reason', Deal.LostReason.NONE)
         deal.mark_as_lost(reason=reason)
         messages.success(request, f"Deal marked as lost successfully!")
-        return redirect('deals:deal_detail', deal_id=deal.id)
+        return redirect('deal_detail', deal_id=deal.id)
     
     return render(request, 'pages/deals/deal_mark_as_lost.html', {
         'deal': deal,
@@ -273,7 +273,7 @@ def stage_create(request):
         if form.is_valid():
             stage = form.save()
             messages.success(request, f"Deal stage '{stage.name}' created successfully!")
-            return redirect('deals:stage_list')
+            return redirect('stage_list')
     else:
         form = DealStageForm()
     
@@ -292,7 +292,7 @@ def stage_update(request, stage_id):
         if form.is_valid():
             form.save()
             messages.success(request, f"Deal stage '{stage.name}' updated successfully!")
-            return redirect('deals:stage_detail', stage_id=stage.id)
+            return redirect('stage_detail', stage_id=stage.id)
     else:
         form = DealStageForm(instance=stage)
     
@@ -311,7 +311,7 @@ def stage_delete(request, stage_id):
         stage_name = stage.name
         stage.delete()
         messages.success(request, f"Deal stage '{stage_name}' deleted successfully!")
-        return redirect('deals:stage_list')
+        return redirect('stage_list')
     
     return render(request, 'pages/deals/stage_confirm_delete.html', {
         'stage': stage,

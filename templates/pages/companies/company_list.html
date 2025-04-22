@@ -1,202 +1,30 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Companies{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <h1><i class="ph ph-buildings"></i> Companies</h1>
-    <p>Browse, filter, and manage companies</p>
+    {% include "components/companies/companies_nav.html" %}
     
-    <div class="action-buttons">
-        <a href="{% url 'company_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Add Company
-        </a>
-        <a href="{% url 'company_list_list' %}" class="btn">
-            <i class="ph ph-list"></i> View Company Lists
-        </a>
-    </div>
-</div>
-
-<div class="filter-section">
-    <form method="get" action="{% url 'company_list' %}" class="filter-form" hx-get="{% url 'company_list_results' %}" hx-target="#company-list-container" hx-swap="innerHTML" hx-trigger="change delay:500ms from:select, submit">
-        <h3>Filter Companies</h3>
-        <div class="filter-form-fields">
-            <div class="form-group">
-                <label for="{{ form.name.id_for_label }}">Company Name</label>
-                {{ form.name }}
-            </div>
+    <article>
+        <header>
+            <hgroup>
+                <h1>Companies</h1>
+                <h2>Manage your organization database</h2>
+            </hgroup>
             
-            <div class="form-group">
-                <label for="{{ form.city.id_for_label }}">City</label>
-                {{ form.city }}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.state.id_for_label }}">State</label>
-                {{ form.state_select }}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.primary_type.id_for_label }}">Business Type</label>
-                {{ form.primary_type_select }}
-            </div>
-            
-            <div class="form-group form-actions">
-                <button type="submit" class="btn">Apply Filters</button>
-                <a href="{% url 'company_list' %}">Clear</a>
-            </div>
+            <form hx-get="{% url 'company_list_results' %}" hx-target="#results" hx-trigger="change, keyup">
+                <div class="grid">
+                    {% for field in form %}
+                        <div>
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </form>
+        </header>
+        
+        <div id="results">
+            {% include "components/companies/company_results.html" %}
         </div>
-    </form>
-</div>
-
-<div id="company-list-container">
-    {% include 'components/companies/company_results.html' %}
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .filter-section {
-        background-color: var(--background-alt);
-        padding: 1.5rem;
-        border-radius: 4px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .filter-form-fields {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .form-actions {
-        display: flex;
-        gap: 0.5rem;
-        align-items: flex-end;
-    }
-    
-    .form-group {
-        margin-bottom: 0;
-    }
-    
-    .table-container {
-        overflow-x: auto;
-        margin-bottom: 1.5rem;
-    }
-    
-    .company-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;  /* Smaller text */
-    }
-    
-    .company-table th,
-    .company-table td {
-        padding: 0.5rem;  /* Less padding */
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;  /* Prevent wrapping */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 250px;  /* Set max width */
-    }
-    
-    .company-table th {
-        background-color: var(--background-alt);
-        font-weight: bold;
-    }
-    
-    .company-table tr:hover {
-        background-color: rgba(0, 0, 0, 0.02);
-    }
-    
-    .actions-cell {
-        white-space: nowrap;
-        display: flex;
-        gap: 0.25rem;
-        justify-content: left;  /* Center actions */
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    .pagination {
-        margin-top: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .pagination-controls {
-        display: flex;
-        gap: 0.25rem;
-    }
-    
-    .current-page {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        background-color: var(--links);
-        color: white;
-        border-radius: 4px;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    
-    .list-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .save-to-list-form {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .save-to-list-form select {
-        min-width: 200px;
-    }
-    
-    .save-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-</style>
+    </article>
 {% endblock %}

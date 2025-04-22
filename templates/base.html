@@ -1,178 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CRM{% endblock %}</title>
     
-    <!-- Water CSS (Auto Theme) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <!-- Pico CSS -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css"
+    >
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css"
+    >
+    
+    <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     
-    <!-- Custom primary color -->
-    <style>
-
-        :root {
-            --links: #0085CA;
-            --button-base: #0085CA;
-            --focus: rgba(0, 133, 202, 0.5);
-            --links-hover: #006BA2;
-            --button-hover: #006BA2;
-            --content-width: 90%; /* Adjust this value as needed */
-            --max-content-width: 1600px; /* Adjust this value as needed */
-
-        }
-
-        body {
-            max-width: var(--max-content-width);
-            font-family: "Atkinson Hyperlegible", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-        }
-        
-        /* Custom navbar styles */
-        .navbar {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 2rem;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.25rem;
-            text-decoration: none;
-            margin-right: 2rem;
-        }
-        
-        .navbar-brand i {
-            margin-right: 0.5rem;
-        }
-        
-        .navbar-nav {
-            display: flex;
-            flex-wrap: wrap;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .navbar-nav li {
-            margin-right: 1.5rem;
-        }
-        
-        .navbar-nav li:last-child {
-            margin-right: 0;
-        }
-        
-        .navbar-nav a {
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-        
-        .navbar-nav a i {
-            margin-right: 0.3rem;
-        }
-        
-        .dropdown {
-            position: relative;
-        }
-        
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: var(--background);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.5rem 0;
-            min-width: 10rem;
-            z-index: 1000;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-        
-        .dropdown-item {
-            display: block;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-        }
-        
-        .dropdown-item:hover {
-            background-color: rgba(0, 133, 202, 0.15);
-        }
-        
-        /* Mobile adjustments */
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .navbar-brand {
-                margin-bottom: 1rem;
-            }
-            
-            .navbar-nav {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .navbar-nav li {
-                margin-right: 0;
-                margin-bottom: 0.5rem;
-            }
-            
-            .dropdown-menu {
-                position: static;
-                box-shadow: none;
-                width: 100%;
-                margin-top: 0.5rem;
-            }
-        }
-    </style>
+    <!-- Phosphor Icons -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"
+    />
     
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     
     <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+        }
     
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+        .danger {
+            background-color: #e53935; /* Red shade */
+            color: #fff;
+            border: none;
+            padding: 0.75em 1.5em;
+            border-radius: 0.25em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
     
-    <!-- Additional CSS -->
-    {% block extra_css %}{% endblock %}
+        .danger:hover {
+            background-color: #d32f2f;
+        }
     
-    <!-- Additional head content -->
-    {% block head %}{% endblock %}
+        .danger:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.2em rgba(229, 57, 53, 0.25);
+        }
+        details.dropdown > summary {
+            outline: none;
+            box-shadow: none;
+          }
+          
+          
+    </style>
+
+    
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Include navbar component -->
-    {% include 'components/navbar.html' %}
-    
-    <main>
+    <main class="container">
+        {% include 'components/navbar2.html' %}
         {% block content %}
-        <!-- Main content will go here -->
         {% endblock %}
     </main>
-    
-    <footer>
-        <p>&copy; {% now "Y" %}</p>
-    </footer>
-    
-    <!-- Additional scripts -->
-    {% block extra_js %}{% endblock %}
 </body>
 </html>

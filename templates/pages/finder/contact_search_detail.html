@@ -1,317 +1,61 @@
-<!-- templates/pages/finder/contact_search_detail.html -->
-{% extends 'base.html' %}
-
-{% block title %}Contact Search Details #{{ search.id }}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Search #{{ search.id }}{% endblock %}
 
 {% block content %}
-<h1>Contact Search Details #{{ search.id }}</h1>
-<p><a href="{% url 'contact_search_list' %}">← Back to all contact searches</a></p>
-
-<div class="search-details">
-    <h2>Search Information</h2>
-    <table>
-        <tr>
-            <th>ID:</th>
-            <td>{{ search.id }}</td>
-        </tr>
-        <tr>
-            <th>Method:</th>
-            <td>{{ search.get_method_display }}</td>
-        </tr>
-        <tr>
-            <th>Created:</th>
-            <td>{{ search.created_at|date:"M d, Y H:i:s" }}</td>
-        </tr>
-        <tr>
-            <th>Results:</th>
-            <td>{{ search.results_count }}</td>
-        </tr>
-        <tr>
-            <th>Status:</th>
-            <td>
-                {% if search.results_count > 0 %}
-                <span class="status-complete">Complete</span>
-                {% else %}
-                <span class="status-pending">In Progress</span>
-                {% endif %}
-            </td>
-        </tr>
-    </table>
+    {% include "components/finder/finder_nav.html" %}
     
-    {% if search_params %}
-    <h2>Search Parameters</h2>
-    <table>
-        {% if search.method == 'scrape' %}
-        <tr>
-            <th>Max Link Depth:</th>
-            <td>{{ search_params.max_depth }}</td>
-        </tr>
-        <tr>
-            <th>Max Pages:</th>
-            <td>{{ search_params.max_pages }}</td>
-        </tr>
-        {% if search_params.target_url %}
-        <tr>
-            <th>Target URL:</th>
-            <td><a href="{{ search_params.target_url }}" target="_blank">{{ search_params.target_url }}</a></td>
-        </tr>
-        {% endif %}
-        <tr>
-            <th>Domain Settings:</th>
-            <td>
-                {% if search_params.stay_within_domain %}
-                Stay within domain
-                {% if search_params.follow_subdomains %}
-                (including subdomains)
-                {% else %}
-                (excluding subdomains)
-                {% endif %}
-                {% else %}
-                Follow all domains
-                {% endif %}
-            </td>
-        </tr>
-        {% endif %}
-    </table>
-    {% endif %}
-    
-    <h2>Found Contacts ({{ contacts|length }})</h2>
-    {% if contacts %}
-    <div class="filter-controls">
-        <input type="text" id="contact-filter" placeholder="Filter contacts..." class="filter-input">
-        <div class="filter-info">
-            <span id="visible-count">{{ contacts|length }}</span> of {{ contacts|length }} contacts shown
-        </div>
-    </div>
-    
-    <table class="contact-table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Position</th>
-                <th>Company</th>
-                <th>Source</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for contact in contacts %}
-            <tr class="contact-row">
-                <td class="contact-name">
-                    {% if contact.first_name or contact.last_name %}
-                    {{ contact.first_name }} {{ contact.last_name }}
-                    {% else %}
-                    <em>Unknown</em>
-                    {% endif %}
-                </td>
-                <td class="contact-email">{{ contact.email }}</td>
-                <td class="contact-position">
-                    {% if contact.position %}
-                    {{ contact.position }}
-                    {% else %}
-                    -
-                    {% endif %}
-                </td>
-                <td class="contact-company">
-                    {% if contact.company %}
-                    <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
-                    {% elif contact.organization_name %}
-                    {{ contact.organization_name }}
-                    {% else %}
-                    -
-                    {% endif %}
-                </td>
-                <td class="contact-source">{{ contact.get_source_channel_display }}</td>
-                <td class="contact-actions">
-                    <a href="#" class="btn btn-sm">View</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <div class="export-controls">
-        <a href="#" class="btn">
-            <i class="ph ph-file-csv"></i> Export to CSV
-        </a>
-        <a href="#" class="btn">
-            <i class="ph ph-plus"></i> Add to Contact List
-        </a>
-    </div>
-    {% else %}
-    <div class="empty-state">
-        {% if search.results_count > 0 %}
-        <p>No contacts are associated with this search.</p>
-        {% else %}
-        <p>No contacts found yet. The search might still be in progress.</p>
-        <div class="loader">
-            <div class="spinner"></div>
-            <span>Processing...</span>
-        </div>
-        <p class="refresh-note">This page will automatically refresh every 30 seconds.</p>
-        {% endif %}
-    </div>
-    {% endif %}
-</div>
-{% endblock content %}
-
-{% block extra_css %}
-<style>
-    .search-details {
-        margin-bottom: 2rem;
-    }
-    
-    h2 {
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
-    
-    table {
-        width: 100%;
-        margin-bottom: 1.5rem;
-        border-collapse: collapse;
-    }
-    
-    th, td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    th {
-        background-color: var(--background-alt);
-        font-weight: bold;
-    }
-    
-    .status-complete {
-        color: green;
-        font-weight: bold;
-    }
-    
-    .status-pending {
-        color: orange;
-        font-weight: bold;
-    }
-    
-    .filter-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .filter-input {
-        flex-grow: 1;
-        max-width: 300px;
-        padding: 0.5rem;
-    }
-    
-    .filter-info {
-        font-size: 0.9rem;
-        color: #666;
-    }
-    
-    .contact-table {
-        font-size: 0.9rem;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .export-controls {
-        margin-top: 1.5rem;
-        display: flex;
-        gap: 1rem;
-    }
-    
-    .loader {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 1.5rem 0;
-    }
-    
-    .spinner {
-        width: 2rem;
-        height: 2rem;
-        border: 3px solid rgba(0, 0, 0, 0.1);
-        border-radius: 50%;
-        border-top-color: var(--links);
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 0.5rem;
-    }
-    
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-    
-    .refresh-note {
-        font-style: italic;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-    }
-</style>
-{% endblock extra_css %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set up contact filtering
-        const filterInput = document.getElementById('contact-filter');
-        const contactRows = document.querySelectorAll('.contact-row');
-        const visibleCountElement = document.getElementById('visible-count');
-        const totalCount = contactRows.length;
+    <article>
+        <header>
+            <hgroup>
+                <h1>{{ search.get_method_display }} Search</h1>
+                <h2>{{ search.created_at|date:"M d, Y H:i" }}</h2>
+            </hgroup>
+        </header>
         
-        if (filterInput) {
-            filterInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                let visibleCount = 0;
-                
-                contactRows.forEach(row => {
-                    const name = row.querySelector('.contact-name').textContent.toLowerCase();
-                    const email = row.querySelector('.contact-email').textContent.toLowerCase();
-                    const position = row.querySelector('.contact-position').textContent.toLowerCase();
-                    const company = row.querySelector('.contact-company').textContent.toLowerCase();
-                    
-                    // Show the row if any of its content matches the search term
-                    if (name.includes(searchTerm) || 
-                        email.includes(searchTerm) || 
-                        position.includes(searchTerm) || 
-                        company.includes(searchTerm)) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-                
-                // Update visible count
-                if (visibleCountElement) {
-                    visibleCountElement.textContent = visibleCount;
-                }
-            });
-        }
+        {% if search_params %}
+        <div class="grid">
+            <div>
+                <h3>Scrape Parameters</h3>
+                <dl>
+                    <dt>Target URL</dt>
+                    <dd>{{ search_params.target_url|default:"-" }}</dd>
+                    <dt>Max Depth</dt>
+                    <dd>{{ search_params.max_depth }}</dd>
+                    <dt>Max Pages</dt>
+                    <dd>{{ search_params.max_pages }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
         
-        // Auto-refresh for in-progress searches
-        const statusElement = document.querySelector('.status-pending');
-        if (statusElement) {
-            // Set up auto-refresh every 30 seconds
-            setTimeout(function() {
-                window.location.reload();
-            }, 30000);
-        }
-    });
-</script>
-{% endblock extra_js %}
+        <h3>Results ({{ contacts|length }})</h3>
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Company</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td><a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a></td>
+                    <td>{{ contact.email }}</td>
+                    <td>
+                        {% if contact.company %}
+                            <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No contacts found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+{% endblock %}

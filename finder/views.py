@@ -93,12 +93,12 @@ def webscrape_search(request):
     
     return render(request, 'pages/finder/webscrape_search.html', {'form': form})
 
-def search_list(request):
+def company_search_list(request):
     """View for listing all company searches"""
     searches = CompanySearch.objects.all().order_by('-created_at')
-    return render(request, 'pages/finder/search_list.html', {'searches': searches})
+    return render(request, 'pages/finder/company_search_list.html', {'searches': searches})
 
-def search_detail(request, search_id):
+def company_search_detail(request, search_id):
     """View for showing details of a specific company search"""
     search = get_object_or_404(CompanySearch, id=search_id)
     companies = search.companies.all()
@@ -108,7 +108,7 @@ def search_detail(request, search_id):
     if search.method == CompanySearch.CompanySearchMethods.SERPAPI:
         search_params = search.serpapi_parameters
     
-    return render(request, 'pages/finder/search_detail.html', {
+    return render(request, 'pages/finder/company_search_detail.html', {
         'search': search,
         'companies': companies,
         'search_params': search_params

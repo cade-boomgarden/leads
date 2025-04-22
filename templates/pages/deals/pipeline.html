@@ -1,504 +1,58 @@
-{% extends 'base.html' %}
-
-{% block title %}Deal Pipeline{% endblock %}
+{% extends "base.html" %}
+{% block title %}Sales Pipeline{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'deals:deal_list' %}">
-            <i class="ph ph-currency-dollar"></i> Deals
-        </a>
-        <span class="divider">/</span>
-        <span>Pipeline</span>
-    </div>
+    {% include "components/deals/deals_nav.html" %}
     
-    <h1>Deal Pipeline</h1>
-    <p>View and track your sales pipeline by stage</p>
-    
-    <div class="action-buttons">
-        <a href="{% url 'deals:deal_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Add Deal
-        </a>
-        <a href="{% url 'deals:stage_list' %}" class="btn btn-secondary">
-            <i class="ph ph-folders"></i> Manage Stages
-        </a>
-    </div>
-</div>
+    <article>
+        <header>
+            <h1>Sales Pipeline</h1>
+            <div class="grid">
+                <article class="secondary">
+                    <header>7 Day Pipeline</header>
+                    <p>${{ pipeline_data.pipeline_7_days|floatformat:2 }}</p>
+                </article>
+                <article class="secondary">
+                    <header>30 Day Pipeline</header>
+                    <p>${{ pipeline_data.pipeline_30_days|floatformat:2 }}</p>
+                </article>
+                <article class="secondary">
+                    <header>Total Pipeline</header>
+                    <p>${{ pipeline_data.total_pipeline|floatformat:2 }}</p>
+                </article>
+            </div>
+        </header>
 
-<div class="pipeline-overview">
-    <div class="overview-card">
-        <div class="overview-header">
-            <h2>Pipeline Value</h2>
-        </div>
-        <div class="overview-body">
-            <div class="value-grid">
-                <div class="value-item">
-                    <div class="value-label">7 Days</div>
-                    <div class="value-amount">${{ pipeline_data.pipeline_7_days|floatformat:2 }}</div>
-                </div>
-                
-                <div class="value-item">
-                    <div class="value-label">14 Days</div>
-                    <div class="value-amount">${{ pipeline_data.pipeline_14_days|floatformat:2 }}</div>
-                </div>
-                
-                <div class="value-item">
-                    <div class="value-label">30 Days</div>
-                    <div class="value-amount">${{ pipeline_data.pipeline_30_days|floatformat:2 }}</div>
-                </div>
-                
-                <div class="value-item">
-                    <div class="value-label">90 Days</div>
-                    <div class="value-amount">${{ pipeline_data.pipeline_90_days|floatformat:2 }}</div>
-                </div>
-                
-                <div class="value-item total-value">
-                    <div class="value-label">Total Pipeline</div>
-                    <div class="value-amount">${{ pipeline_data.total_pipeline|floatformat:2 }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="pipeline-visualization">
-    <h2>Pipeline by Stage</h2>
-    <div class="pipeline-stages">
-        {% for stage_data in pipeline_data.stages %}
-        <div class="pipeline-stage">
-            <div class="stage-header">
-                <h3>{{ stage_data.stage.name }}</h3>
-                <div class="stage-stats">
-                    <div class="stage-count">{{ stage_data.deal_count }} deals</div>
-                    <div class="stage-percentage">{{ stage_data.stage.conversion_probability|floatformat:0 }}% probability</div>
-                </div>
-            </div>
-            
-            <div class="stage-values">
-                <div class="stage-value-item">
-                    <div class="value-label">Total Value</div>
-                    <div class="value-amount">${{ stage_data.total_value|floatformat:2 }}</div>
-                </div>
-                
-                <div class="stage-value-item">
-                    <div class="value-label">Expected Value</div>
-                    <div class="value-amount">${{ stage_data.expected_value|floatformat:2 }}</div>
-                </div>
-            </div>
-            
-            <div class="stage-deals">
-                {% for deal in stage_data.deals %}
-                <div class="deal-card">
-                    <div class="deal-header">
-                        <div class="deal-contact">
-                            {% if deal.contact %}
-                            <a href="{% url 'contact_detail' deal.contact.id %}">
-                                {{ deal.contact.first_name }} {{ deal.contact.last_name }}
-                            </a>
-                            {% else %}
-                            <em>No contact</em>
-                            {% endif %}
-                        </div>
-                        <div class="deal-value">${{ deal.value|floatformat:2 }}</div>
-                    </div>
+        <div class="grid">
+            {% for stage in pipeline_data.stages %}
+            <div>
+                <article>
+                    <header>{{ stage.stage.name }}</header>
+                    <p>{{ stage.deal_count }} deals (${{ stage.total_value|floatformat:2 }})</p>
+                    <small>Expected: ${{ stage.expected_value|floatformat:2 }}</small>
                     
-                    <div class="deal-details">
-                        <div class="deal-expected">
-                            <span class="label">Expected:</span> ${{ deal.expected_value|floatformat:2 }}
-                        </div>
-                        
-                        {% if deal.estimated_close_date %}
-                        <div class="deal-close-date">
-                            <span class="label">Close:</span> {{ deal.estimated_close_date|date:"M d, Y" }}
-                            {% if deal.days_until_close is not None %}
-                            {% if deal.days_until_close == 0 %}
-                            <span class="badge badge-urgent">Today</span>
-                            {% elif deal.days_until_close == 1 %}
-                            <span class="badge badge-soon">Tomorrow</span>
-                            {% elif deal.days_until_close <= 7 %}
-                            <span class="badge badge-soon">{{ deal.days_until_close }} days</span>
-                            {% endif %}
-                            {% endif %}
-                        </div>
-                        {% endif %}
+                    {% for deal in stage.deals %}
+                    <div class="deal-card">
+                        <h4>{{ deal.contact.first_name }} {{ deal.contact.last_name }}</h4>
+                        <p>${{ deal.value }} · {{ deal.estimated_close_date|date:"M d"|default:"No date" }}</p>
                     </div>
-                    
-                    <div class="deal-actions">
-                        <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-sm">View</a>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="empty-stage-message">
-                    <p>No deals in this stage</p>
-                </div>
-                {% endfor %}
+                    {% endfor %}
+                </article>
             </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="empty-pipeline-message">
-            <p>No deal stages defined. <a href="{% url 'deals:stage_create' %}">Create deal stages</a> to start tracking your pipeline.</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
 
-{% if pipeline_data.closing_soon %}
-<div class="closing-soon-section">
-    <h2>Deals Closing Soon (Next 7 Days)</h2>
-    <div class="closing-soon-deals">
-        {% for deal in pipeline_data.closing_soon %}
-        <div class="closing-deal-card">
-            <div class="closing-deal-header">
-                <div class="deal-contact">
-                    {% if deal.contact %}
-                    <a href="{% url 'contact_detail' deal.contact.id %}">
-                        {{ deal.contact.first_name }} {{ deal.contact.last_name }}
-                    </a>
-                    {% else %}
-                    <em>No contact</em>
-                    {% endif %}
-                </div>
-                
-                <div class="deal-stage">
-                    {% if deal.stage %}
-                    {{ deal.stage.name }}
-                    {% else %}
-                    <em>No stage</em>
-                    {% endif %}
-                </div>
+        <h2>Closing Soon (Next 7 Days)</h2>
+        <div class="grid">
+            {% for deal in pipeline_data.closing_soon %}
+            <div class="deal-card">
+                <h4>{{ deal.contact.first_name }} {{ deal.contact.last_name }}</h4>
+                <p>${{ deal.value }} · {{ deal.estimated_close_date|date:"M d" }}</p>
+                <progress value="{{ deal.days_until_close }}" max="7"></progress>
             </div>
-            
-            <div class="closing-deal-details">
-                <div class="deal-value-expected">
-                    <div class="deal-value">${{ deal.value|floatformat:2 }}</div>
-                    <div class="deal-expected">${{ deal.expected_value|floatformat:2 }} expected</div>
-                </div>
-                
-                <div class="deal-close-date">
-                    <div class="close-date">{{ deal.estimated_close_date|date:"M d, Y" }}</div>
-                    <div class="days-left">
-                        {% if deal.days_until_close == 0 %}
-                        <span class="badge badge-urgent">Today</span>
-                        {% elif deal.days_until_close == 1 %}
-                        <span class="badge badge-soon">Tomorrow</span>
-                        {% else %}
-                        <span class="badge badge-soon">{{ deal.days_until_close }} days</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="closing-deal-actions">
-                <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-sm">View Deal</a>
-                
-                <form method="post" action="{% url 'deals:deal_mark_as_won' deal.id %}" style="display: inline;" onsubmit="return confirm('Mark this deal as won?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-success">
-                        <i class="ph ph-check"></i> Won
-                    </button>
-                </form>
-                
-                <a href="{% url 'deals:deal_mark_as_lost' deal.id %}" class="btn btn-sm btn-danger">
-                    <i class="ph ph-x"></i> Lost
-                </a>
-            </div>
+            {% empty %}
+            <p>No deals closing in the next 7 days</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="empty-closing-message">
-            <p>No deals closing in the next 7 days.</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .pipeline-overview {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .overview-card {
-        background-color: var(--background-alt);
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .overview-header {
-        padding: 1rem;
-        background-color: rgba(0, 0, 0, 0.05);
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .overview-header h2 {
-        margin: 0;
-        font-size: 1.2rem;
-    }
-    
-    .overview-body {
-        padding: 1.5rem;
-    }
-    
-    .value-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .value-item {
-        text-align: center;
-    }
-    
-    .value-label {
-        font-size: 0.9rem;
-        opacity: 0.7;
-        margin-bottom: 0.5rem;
-    }
-    
-    .value-amount {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-    
-    .total-value {
-        grid-column: 1 / -1;
-        border-top: 1px solid var(--border);
-        padding-top: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .total-value .value-amount {
-        font-size: 1.8rem;
-        color: var(--links);
-    }
-    
-    .pipeline-visualization {
-        margin-bottom: 3rem;
-    }
-    
-    .pipeline-visualization h2 {
-        margin-bottom: 1.5rem;
-    }
-    
-    .pipeline-stages {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .pipeline-stage {
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .stage-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .stage-header h3 {
-        margin: 0;
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
-    }
-    
-    .stage-stats {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        opacity: 0.8;
-    }
-    
-    .stage-values {
-        display: flex;
-        justify-content: space-between;
-        padding: 1rem;
-        background-color: rgba(0, 0, 0, 0.02);
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .stage-value-item {
-        text-align: center;
-    }
-    
-    .stage-value-item .value-label {
-        font-size: 0.8rem;
-    }
-    
-    .stage-value-item .value-amount {
-        font-size: 1.1rem;
-    }
-    
-    .stage-deals {
-        padding: 1rem;
-        max-height: 500px;
-        overflow-y: auto;
-    }
-    
-    .deal-card {
-        background-color: var(--background-alt);
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        padding: 1rem;
-    }
-    
-    .deal-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-    }
-    
-    .deal-contact {
-        font-weight: bold;
-    }
-    
-    .deal-value {
-        font-weight: bold;
-    }
-    
-    .deal-details {
-        margin-bottom: 0.75rem;
-        font-size: 0.85rem;
-    }
-    
-    .deal-expected, .deal-close-date {
-        margin-bottom: 0.25rem;
-    }
-    
-    .label {
-        opacity: 0.7;
-    }
-    
-    .badge {
-        display: inline-block;
-        padding: 0.15rem 0.4rem;
-        border-radius: 3px;
-        font-size: 0.75rem;
-        margin-left: 0.25rem;
-    }
-    
-    .badge-urgent {
-        background-color: #ffebee;
-        color: #d32f2f;
-    }
-    
-    .badge-soon {
-        background-color: #fff8e1;
-        color: #ffa000;
-    }
-    
-    .deal-actions {
-        text-align: right;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .empty-stage-message, .empty-pipeline-message, .empty-closing-message {
-        text-align: center;
-        padding: 2rem 1rem;
-        background-color: rgba(0, 0, 0, 0.03);
-        border-radius: 4px;
-        font-style: italic;
-        color: #666;
-    }
-    
-    .closing-soon-section {
-        margin-bottom: 3rem;
-    }
-    
-    .closing-soon-section h2 {
-        margin-bottom: 1.5rem;
-    }
-    
-    .closing-soon-deals {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1rem;
-    }
-    
-    .closing-deal-card {
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .closing-deal-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .closing-deal-details {
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .deal-value-expected .deal-expected {
-        font-size: 0.85rem;
-        opacity: 0.7;
-        margin-top: 0.25rem;
-    }
-    
-    .deal-close-date {
-        text-align: right;
-    }
-    
-    .days-left {
-        margin-top: 0.25rem;
-    }
-    
-    .closing-deal-actions {
-        padding: 1rem;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .btn-success {
-        background-color: #2ecc71;
-        border-color: #2ecc71;
-    }
-    
-    .btn-success:hover {
-        background-color: #27ae60;
-        border-color: #27ae60;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-</style>
+    </article>
 {% endblock %}

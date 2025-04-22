@@ -4,8 +4,8 @@ from . import views
 urlpatterns = [
     # Company search URLs
     path('serpapi/', views.serpapi_search, name='serpapi_search'),
-    path('searches/', views.search_list, name='search_list'),
-    path('searches/<int:search_id>/', views.search_detail, name='search_detail'),
+    path('searches/', views.company_search_list, name='company_search_list'),
+    path('searches/<int:search_id>/', views.company_search_detail, name='company_search_detail'),
     
     # Contact search URLs
     path('webscrape/', views.webscrape_search, name='webscrape_search'),

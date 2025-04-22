@@ -1,302 +1,36 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ title|default:"Cohort Form" }}{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'cohort_list' %}">
-            <i class="ph ph-users-three"></i> Cohorts
-        </a>
-        <span class="divider">/</span>
-        {% if cohort %}
-        <a href="{% url 'cohort_detail' cohort.id %}">{{ cohort.name }}</a>
-        <span class="divider">/</span>
-        <span>Edit</span>
-        {% else %}
-        <span>Create New Cohort</span>
-        {% endif %}
-    </div>
+    {% include "components/contacts/contacts_nav.html" %}
     
-    <h1>{{ title }}</h1>
-</div>
-
-<div class="form-container">
-    <form method="post" id="cohort-form">
-        {% csrf_token %}
+    <article>
+        <header>
+            <h1>{{ title }}</h1>
+        </header>
         
-        {% if form.non_field_errors %}
-        <div class="form-errors">
-            {% for error in form.non_field_errors %}
-            <p class="error">{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <div class="form-section">
-            <h2>Basic Information</h2>
+        <form method="post">
+            {% csrf_token %}
             
-            <div class="form-group">
-                <label for="{{ form.name.id_for_label }}">Cohort Name*</label>
-                {{ form.name }}
-                {% if form.name.errors %}
-                <div class="field-errors">
-                    {% for error in form.name.errors %}
-                    <p class="error">{{ error }}</p>
+            <div class="grid">
+                {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small>{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p role="alert">{{ error }}</p>
                     {% endfor %}
                 </div>
-                {% endif %}
+                {% endfor %}
             </div>
             
-            <div class="form-group">
-                <label for="{{ form.description.id_for_label }}">Description</label>
-                {{ form.description }}
-                {% if form.description.errors %}
-                <div class="field-errors">
-                    {% for error in form.description.errors %}
-                    <p class="error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <small class="help-text">Optional: Provide details about the purpose of this cohort</small>
+            <div role="group">
+                <button type="submit">{{ submit_text }}</button>
+                <a href="{% if cohort %}{% url 'cohort_detail' cohort.id %}{% else %}{% url 'cohort_list' %}{% endif %}" role="button">Cancel</a>
             </div>
-            
-            <div class="form-group">
-                <label for="{{ form.company_list.id_for_label }}">Select Company List*</label>
-                {{ form.company_list }}
-                {% if form.company_list.errors %}
-                <div class="field-errors">
-                    {% for error in form.company_list.errors %}
-                    <p class="error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <small class="help-text">{{ form.company_list.help_text }}</small>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Selection Method</h2>
-            <p class="form-section-desc">Choose how contacts will be selected from each company</p>
-            
-            <div class="selection-method">
-                {{ form.selection_method }}
-                {% if form.selection_method.errors %}
-                <div class="field-errors">
-                    {% for error in form.selection_method.errors %}
-                    <p class="error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <small class="help-text">{{ form.selection_method.help_text }}</small>
-                
-                <div class="method-options">
-                    <div class="method-option" id="email_prefix_option">
-                        <div class="form-group">
-                            <label for="{{ form.email_prefix_hierarchy.id_for_label }}">Email Prefix Hierarchy</label>
-                            {{ form.email_prefix_hierarchy }}
-                            {% if form.email_prefix_hierarchy.errors %}
-                            <div class="field-errors">
-                                {% for error in form.email_prefix_hierarchy.errors %}
-                                <p class="error">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="help-text">Enter prefixes in order of preference. Will try to match email addresses starting with these prefixes.</small>
-                        </div>
-                    </div>
-                    
-                    <div class="method-option" id="department_option">
-                        <div class="form-group">
-                            <label for="{{ form.target_department.id_for_label }}">Target Department</label>
-                            {{ form.target_department }}
-                            {% if form.target_department.errors %}
-                            <div class="field-errors">
-                                {% for error in form.target_department.errors %}
-                                <p class="error">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="help-text">Will select contacts from this department if found</small>
-                        </div>
-                    </div>
-                    
-                    <div class="method-option" id="seniority_option">
-                        <div class="form-group">
-                            <label for="{{ form.minimum_seniority.id_for_label }}">Minimum Seniority Level (0-10)</label>
-                            {{ form.minimum_seniority }}
-                            {% if form.minimum_seniority.errors %}
-                            <div class="field-errors">
-                                {% for error in form.minimum_seniority.errors %}
-                                <p class="error">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="help-text">10 = CEO/Founder, 8 = Director/VP, 5 = Manager, 0 = Any</small>
-                        </div>
-                    </div>
-                    
-                    <div class="method-option" id="job_title_option">
-                        <div class="form-group">
-                            <label for="{{ form.job_title_keywords.id_for_label }}">Job Title Keywords</label>
-                            {{ form.job_title_keywords }}
-                            {% if form.job_title_keywords.errors %}
-                            <div class="field-errors">
-                                {% for error in form.job_title_keywords.errors %}
-                                <p class="error">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="help-text">Enter keywords in order of preference. Will try to match positions containing these keywords.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-actions">
-            <button type="submit" class="btn">{{ submit_text }}</button>
-            {% if cohort %}
-            <a href="{% url 'cohort_detail' cohort.id %}" class="btn btn-secondary">Cancel</a>
-            {% else %}
-            <a href="{% url 'cohort_list' %}" class="btn btn-secondary">Cancel</a>
-            {% endif %}
-        </div>
-    </form>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const methodRadios = document.querySelectorAll('input[name="selection_method"]');
-        const methodOptions = document.querySelectorAll('.method-option');
-        
-        // Function to show/hide method options based on selection
-        function updateMethodOptions() {
-            const selectedMethod = document.querySelector('input[name="selection_method"]:checked').value;
-            
-            // Hide all options first
-            methodOptions.forEach(option => {
-                option.style.display = 'none';
-            });
-            
-            // Show the selected option
-            const selectedOption = document.getElementById(selectedMethod + '_option');
-            if (selectedOption) {
-                selectedOption.style.display = 'block';
-            }
-        }
-        
-        // Set up initial state
-        updateMethodOptions();
-        
-        // Add change event listeners
-        methodRadios.forEach(radio => {
-            radio.addEventListener('change', updateMethodOptions);
-        });
-    });
-</script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .form-container {
-        margin-top: 1.5rem;
-        max-width: 800px;
-    }
-    
-    .form-section {
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .form-section h2 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-    }
-    
-    .form-section-desc {
-        margin-top: 0;
-        margin-bottom: 1rem;
-        color: #666;
-    }
-    
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: bold;
-    }
-    
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-        width: 100%;
-    }
-    
-    .form-errors,
-    .field-errors {
-        background-color: #ffebee;
-        border: 1px solid #ef9a9a;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .error {
-        color: #c62828;
-        margin: 0.25rem 0;
-    }
-    
-    .help-text {
-        display: block;
-        margin-top: 0.25rem;
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    .selection-method {
-        margin-top: 1rem;
-    }
-    
-    .method-options {
-        margin-top: 1.5rem;
-        margin-left: 1.5rem;
-    }
-    
-    /* Style the radio buttons to look nicer */
-    .selection-method input[type="radio"] {
-        margin-right: 0.5rem;
-    }
-    
-    .selection-method label {
-        display: block;
-        margin-bottom: 0.75rem;
-        font-weight: normal;
-    }
-    
-    .form-actions {
-        margin-top: 2rem;
-        display: flex;
-        gap: 1rem;
-    }
-</style>
+        </form>
+    </article>
 {% endblock %}

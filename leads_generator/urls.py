@@ -8,5 +8,5 @@ urlpatterns = [
     path('finder/', include('finder.urls')),
     path('companies/', include('companies.urls')),
     path('contacts/', include('contacts.urls')),
-    path('deals/', include(('deals.urls', 'deals'), namespace='deals')),
+    path('deals/', include('deals.urls')),
 ]

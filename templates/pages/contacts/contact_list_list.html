@@ -1,248 +1,42 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Contact Lists{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <h1><i class="ph ph-list-bullets"></i> Contact Lists</h1>
-    <p>Organize contacts into lists for easier management</p>
+    {% include "components/contacts/contacts_nav.html" %}
     
-    <div class="action-buttons">
-        <a href="{% url 'contact_list_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Create New List
-        </a>
-        <a href="{% url 'contact_list' %}" class="btn btn-secondary">
-            <i class="ph ph-users"></i> View All Contacts
-        </a>
-        <a href="{% url 'cohort_list' %}" class="btn btn-secondary">
-            <i class="ph ph-users-three"></i> View Cohorts
-        </a>
-    </div>
-</div>
-
-<div class="lists-container">
-    {% if contact_lists %}
-    <div class="lists-grid">
-        {% for contact_list in contact_lists %}
-        <div class="list-card">
-            <div class="list-card-header">
-                <h2>{{ contact_list.name }}</h2>
-                <span class="contact-count">{{ contact_list.contacts.count }} contacts</span>
-            </div>
-            
-            <div class="list-card-body">
-                {% if contact_list.description %}
-                <p class="list-description">{{ contact_list.description }}</p>
-                {% else %}
-                <p class="list-description empty">No description provided.</p>
-                {% endif %}
-                
-                <div class="list-meta">
-                    <div class="meta-item">
-                        <i class="ph ph-clock"></i>
-                        <span>Created: {{ contact_list.created_at|date:"M d, Y" }}</span>
-                    </div>
-                    
-                    <div class="meta-item">
-                        <i class="ph ph-arrows-clockwise"></i>
-                        <span>Updated: {{ contact_list.updated_at|date:"M d, Y" }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="list-card-footer">
-                <a href="{% url 'contact_list_detail' contact_list.id %}" class="btn btn-sm">View List</a>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle">
-                        <i class="ph ph-dots-three"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="{% url 'contact_list_update' contact_list.id %}" class="dropdown-item">
-                            <i class="ph ph-pencil"></i> Edit
-                        </a>
-                        <a href="{% url 'contact_list_export' contact_list.id %}" class="dropdown-item">
-                            <i class="ph ph-file-csv"></i> Export to CSV
-                        </a>
-                        <a href="{% url 'contact_list_delete' contact_list.id %}" class="dropdown-item text-danger">
-                            <i class="ph ph-trash"></i> Delete
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <i class="ph ph-clipboard-text"></i>
-        <h2>No Contact Lists Yet</h2>
-        <p>Create a list to organize your contacts by category, company, or any other grouping.</p>
-        <a href="{% url 'contact_list_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Create Your First List
-        </a>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-section {
-        margin-bottom: 2rem;
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .lists-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .list-card {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    
-    .list-card-header {
-        padding: 1rem;
-        background-color: var(--background-alt);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .list-card-header h2 {
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    
-    .contact-count {
-        font-size: 0.8rem;
-        background-color: rgba(0, 0, 0, 0.1);
-        padding: 0.25rem 0.5rem;
-        border-radius: 16px;
-    }
-    
-    .list-card-body {
-        padding: 1rem;
-        flex-grow: 1;
-    }
-    
-    .list-description {
-        margin-top: 0;
-        margin-bottom: 1rem;
-        line-height: 1.5;
-    }
-    
-    .list-description.empty {
-        font-style: italic;
-        opacity: 0.7;
-    }
-    
-    .list-meta {
-        margin-top: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    .list-card-footer {
-        padding: 0.75rem 1rem;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .dropdown-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-    
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        right: 0;
-        bottom: 100%;
-        min-width: 160px;
-        background-color: var(--background);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        z-index: 10;
-        margin-bottom: 0.5rem;
-    }
-    
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
-    
-    .dropdown-item {
-        display: block;
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: var(--text);
-        transition: background-color 0.2s;
-    }
-    
-    .dropdown-item:hover {
-        background-color: var(--background-alt);
-    }
-    
-    .text-danger {
-        color: #e74c3c;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    .empty-state h2 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-    }
-    
-    .empty-state p {
-        margin-bottom: 1.5rem;
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-</style>
+    <article>
+        <header>
+            <hgroup>
+                <h1>Contact Lists</h1>
+                <a href="{% url 'contact_list_create' %}" role="button">Create List</a>
+            </hgroup>
+        </header>
+        
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contacts</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for list in contact_lists %}
+                <tr>
+                    <td><a href="{% url 'contact_list_detail' list.id %}">{{ list.name }}</a></td>
+                    <td>{{ list.contacts.count }}</td>
+                    <td>
+                        <a href="{% url 'contact_list_update' list.id %}" class="secondary">Edit</a>
+                        <a href="{% url 'contact_list_delete' list.id %}" class="contrast">Delete</a>
+                        <a href="{% url 'contact_list_export' list.id %}" class="secondary">Export</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No lists created yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
 {% endblock %}

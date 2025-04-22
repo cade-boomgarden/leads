@@ -1,120 +1,37 @@
-<!-- templates/pages/finder/serpapi_search.html -->
-{% extends 'base.html' %}
-
-{% block title %}Search for Companies - SerpAPI{% endblock %}
+{% extends "base.html" %}
+{% block title %}Company Search{% endblock %}
 
 {% block content %}
-<h1>Find Companies with SerpAPI</h1>
-<p class="mb-4">Use Google Maps data to search for businesses</p>
-
-<form method="post">
-    {% csrf_token %}
+    {% include "components/finder/finder_nav.html" %}
     
-    {% if form.non_field_errors %}
-    <div class="errors">
-        {% for error in form.non_field_errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <div class="form-group">
-        <label for="{{ form.query.id_for_label }}">{{ form.query.label }}</label>
-        {{ form.query }}
-        {% if form.query.help_text %}
-        <small>{{ form.query.help_text }}</small>
-        {% endif %}
-        {% if form.query.errors %}
-        <div class="errors">
-            {% for error in form.query.errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    
-    <h2>Location</h2>
-    <p class="mb-3">Provide either a place name OR coordinates</p>
-    
-    <div class="form-group">
-        <label for="{{ form.place_name.id_for_label }}">{{ form.place_name.label }}</label>
-        {{ form.place_name }}
-        {% if form.place_name.help_text %}
-        <small>{{ form.place_name.help_text }}</small>
-        {% endif %}
-        {% if form.place_name.errors %}
-        <div class="errors">
-            {% for error in form.place_name.errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="coordinate-fields">
-        <div class="form-group">
-            <label for="{{ form.latitude.id_for_label }}">{{ form.latitude.label }}</label>
-            {{ form.latitude }}
-            {% if form.latitude.help_text %}
-            <small>{{ form.latitude.help_text }}</small>
-            {% endif %}
-            {% if form.latitude.errors %}
-            <div class="errors">
-                {% for error in form.latitude.errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
+    <article>
+        <header>
+            <h1>Find Companies</h1>
+            <p>Search Google Maps via SerpAPI for local businesses</p>
+        </header>
         
-        <div class="form-group">
-            <label for="{{ form.longitude.id_for_label }}">{{ form.longitude.label }}</label>
-            {{ form.longitude }}
-            {% if form.longitude.help_text %}
-            <small>{{ form.longitude.help_text }}</small>
-            {% endif %}
-            {% if form.longitude.errors %}
-            <div class="errors">
-                {% for error in form.longitude.errors %}
-                    <p>{{ error }}</p>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div>
+                {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small>{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
                 {% endfor %}
             </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <div class="form-group">
-        <label for="{{ form.zoom.id_for_label }}">{{ form.zoom.label }}</label>
-        {{ form.zoom }}
-        {% if form.zoom.help_text %}
-        <small>{{ form.zoom.help_text }}</small>
-        {% endif %}
-        {% if form.zoom.errors %}
-        <div class="errors">
-            {% for error in form.zoom.errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        <label for="{{ form.max_results.id_for_label }}">{{ form.max_results.label }}</label>
-        {{ form.max_results }}
-        {% if form.max_results.help_text %}
-        <small>{{ form.max_results.help_text }}</small>
-        {% endif %}
-        {% if form.max_results.errors %}
-        <div class="errors">
-            {% for error in form.max_results.errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="form-actions">
-        <button type="submit" class="btn">Search for Companies</button>
-    </div>
-</form>
+            
+            <div role="group">
+                <button type="submit">Start Search</button>
+                <a href="{% url 'company_search_list' %}" role="button">Cancel</a>
+            </div>
+        </form>
+    </article>
 {% endblock %}

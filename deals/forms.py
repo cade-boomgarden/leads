@@ -11,15 +11,15 @@ class DealForm(ModelForm):
             'notes', 'estimated_close_date'
         ]
         widgets = {
-            'contact': forms.Select(attrs={'class': 'form-control'}),
-            'value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'stage': forms.Select(attrs={'class': 'form-control'}),
+            'contact': forms.TextInput(attrs={'disabled': 'disabled', 'placeholder': 'Contact'}),
+            'value': forms.NumberInput(attrs={'step': '0.01'}),
+            'stage': forms.Select(attrs={}),
             'manual_conversion_probability': forms.NumberInput(
-                attrs={'class': 'form-control', 'min': '0', 'max': '1', 'step': '0.01'}
+                attrs={ 'min': '0', 'max': '1', 'step': '0.01'}
             ),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'notes': forms.Textarea(attrs={ 'rows': 4}),
             'estimated_close_date': forms.DateTimeInput(
-                attrs={'class': 'form-control', 'type': 'datetime-local'}
+                attrs={ 'type': 'datetime-local'}
             ),
         }
     
@@ -42,11 +42,11 @@ class DealStageForm(ModelForm):
         fields = ['name', 'description', 'conversion_probability', 'order']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'description': forms.Textarea(attrs={ 'rows': 3}),
             'conversion_probability': forms.NumberInput(
-                attrs={'class': 'form-control', 'min': '0', 'max': '1', 'step': '0.01'}
+                attrs={ 'min': '0', 'max': '1', 'step': '0.01'}
             ),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'order': forms.NumberInput(attrs={ 'min': '0'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -57,17 +57,17 @@ class DealStageForm(ModelForm):
 class DealFilterForm(forms.Form):
     contact = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by contact'})
+        widget=forms.TextInput(attrs={ 'placeholder': 'Filter by contact'})
     )
     
     value_min = forms.DecimalField(
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Min value'})
+        widget=forms.NumberInput(attrs={ 'placeholder': 'Min value'})
     )
     
     value_max = forms.DecimalField(
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Max value'})
+        widget=forms.NumberInput(attrs={ 'placeholder': 'Max value'})
     )
     
     stage = forms.ModelChoiceField(
@@ -90,10 +90,10 @@ class DealFilterForm(forms.Form):
     
     close_date_start = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(attrs={ 'type': 'date'})
     )
     
     close_date_end = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(attrs={ 'type': 'date'})
     )

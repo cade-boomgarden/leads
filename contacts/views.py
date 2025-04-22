@@ -281,6 +281,11 @@ def contact_list(request):
         
         if form.cleaned_data.get('status'):
             contacts = contacts.filter(status=form.cleaned_data['status'])
+        
+        if form.cleaned_data.get('zerobounce_status'):
+            contacts = contacts.filter(
+                zerobounce_status=form.cleaned_data['zerobounce_status']
+            )
     
     # Order contacts by name
     contacts = contacts.order_by('last_name', 'first_name')

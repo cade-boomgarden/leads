@@ -39,8 +39,8 @@ class CompanyListForm(forms.ModelForm):
         model = CompanyList
         fields = ['name', 'description']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'name': forms.TextInput(attrs={'aria-label': 'List name'}),
+            'description': forms.Textarea(attrs={'aria-label': 'Description', 'rows': 4}),
         }
 
 class CompanyForm(forms.ModelForm):
@@ -48,7 +48,7 @@ class CompanyForm(forms.ModelForm):
     state_select = forms.ChoiceField(
         choices=get_us_states,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'aria-label': 'State'})
     )
     
     class Meta:
@@ -59,18 +59,18 @@ class CompanyForm(forms.ModelForm):
             'primary_type', 'rating', 'reviews_count',
         ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'domain': forms.TextInput(attrs={'class': 'form-control'}),
-            'website_url': forms.URLInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'address': forms.TextInput(attrs={'class': 'form-control'}),
-            'city': forms.TextInput(attrs={'class': 'form-control'}),
-            'state': forms.TextInput(attrs={'class': 'form-control'}),
-            'state_code': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'primary_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'rating': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
-            'reviews_count': forms.NumberInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'aria-label': 'Company name'}),
+            'domain': forms.TextInput(attrs={'aria-label': 'Domain'}),
+            'website_url': forms.URLInput(attrs={'aria-label': 'Website URL'}),
+            'phone': forms.TextInput(attrs={'aria-label': 'Phone'}),
+            'address': forms.TextInput(attrs={'aria-label': 'Address'}),
+            'city': forms.TextInput(attrs={'aria-label': 'City'}),
+            'state': forms.TextInput(attrs={'aria-label': 'State'}),
+            'state_code': forms.TextInput(attrs={'aria-label': 'State code'}),
+            'description': forms.Textarea(attrs={'aria-label': 'Description', 'rows': 4}),
+            'primary_type': forms.TextInput(attrs={'aria-label': 'Primary type'}),
+            'rating': forms.NumberInput(attrs={'aria-label': 'Rating', 'step': '0.1'}),
+            'reviews_count': forms.NumberInput(attrs={'aria-label': 'Reviews count'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -100,34 +100,34 @@ class CompanyForm(forms.ModelForm):
 class CompanyFilterForm(forms.Form):
     name = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by name'})
+        widget=forms.TextInput(attrs={'aria-label': 'Filter by name', 'placeholder': 'Filter by name'})
     )
     
     city = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by city'})
+        widget=forms.TextInput(attrs={'aria-label': 'Filter by city', 'placeholder': 'Filter by city'})
     )
     
     state = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by state'})
+        widget=forms.TextInput(attrs={'aria-label': 'Filter by state', 'placeholder': 'Filter by state'})
     )
     
     state_select = forms.ChoiceField(
         choices=get_us_states,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'aria-label': 'Filter by state'})
     )
     
     primary_type = forms.CharField(
         required=False, 
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Filter by type'})
+        widget=forms.TextInput(attrs={'aria-label': 'Filter by type', 'placeholder': 'Filter by type'})
     )
     
     primary_type_select = forms.ChoiceField(
         choices=get_business_types,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'aria-label': 'Filter by type'})
     )
 
 class CompanyListAddForm(forms.Form):

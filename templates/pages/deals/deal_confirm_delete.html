@@ -1,130 +1,21 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Delete Deal{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="header-breadcrumb">
-        <a href="{% url 'deals:deal_list' %}">
-            <i class="ph ph-currency-dollar"></i> Deals
-        </a>
-        <span class="divider">/</span>
-        <a href="{% url 'deals:deal_detail' deal.id %}">Deal Details</a>
-        <span class="divider">/</span>
-        <span>Delete</span>
-    </div>
+    {% include "components/deals/deals_nav.html" %}
     
-    <h1>Delete Deal</h1>
-</div>
-
-<div class="delete-container">
-    <div class="delete-warning">
-        <div class="warning-icon">
-            <i class="ph ph-warning"></i>
-        </div>
+    <article>
+        <header>
+            <h1>Confirm Deletion</h1>
+        </header>
         
-        <div class="warning-text">
-            <h2>Are you sure you want to delete this deal?</h2>
-            <p>You are about to delete this deal. This action cannot be undone.</p>
-            
-            <div class="deal-summary">
-                <p><strong>Contact:</strong> 
-                    {% if deal.contact %}
-                    {{ deal.contact.first_name }} {{ deal.contact.last_name }}
-                    {% else %}
-                    No contact associated
-                    {% endif %}
-                </p>
-                <p><strong>Value:</strong> ${{ deal.value|floatformat:2 }}</p>
-                <p><strong>Stage:</strong> 
-                    {% if deal.stage %}
-                    {{ deal.stage.name }}
-                    {% else %}
-                    No stage assigned
-                    {% endif %}
-                </p>
-                <p><strong>Status:</strong> {{ deal.status }}</p>
-                {% if deal.estimated_close_date %}
-                <p><strong>Estimated Close Date:</strong> {{ deal.estimated_close_date|date:"M d, Y" }}</p>
-                {% endif %}
-                <p><strong>Created:</strong> {{ deal.created_at|date:"M d, Y" }}</p>
+        <form method="post">
+            {% csrf_token %}
+            <p>Are you sure you want to delete this deal with {{ deal.contact.first_name }} {{ deal.contact.last_name }}?</p>
+            <div role="group">
+                <button type="submit" class="danger">Confirm Delete</button>
+                <a href="{% url 'deal_detail' deal.id %}" role="button">Cancel</a>
             </div>
-        </div>
-    </div>
-    
-    <form method="post">
-        {% csrf_token %}
-        <div class="delete-actions">
-            <button type="submit" class="btn btn-danger">Yes, Delete This Deal</button>
-            <a href="{% url 'deals:deal_detail' deal.id %}" class="btn btn-secondary">No, Go Back</a>
-        </div>
-    </form>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .header-breadcrumb {
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .divider {
-        color: var(--border);
-    }
-    
-    .delete-container {
-        margin-top: 1.5rem;
-    }
-    
-    .delete-warning {
-        display: flex;
-        gap: 1.5rem;
-        background-color: #fff3e0;
-        border: 1px solid #ffe0b2;
-        border-radius: 4px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .warning-icon {
-        font-size: 2.5rem;
-        color: #f57c00;
-        flex-shrink: 0;
-    }
-    
-    .warning-text h2 {
-        margin-top: 0;
-        color: #e65100;
-        font-size: 1.2rem;
-    }
-    
-    .deal-summary {
-        background-color: rgba(255, 255, 255, 0.5);
-        border-radius: 4px;
-        padding: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .deal-summary p {
-        margin: 0.5rem 0;
-    }
-    
-    .delete-actions {
-        display: flex;
-        gap: 1rem;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-</style>
+        </form>
+    </article>
 {% endblock %}

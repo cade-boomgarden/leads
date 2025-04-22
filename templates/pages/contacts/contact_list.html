@@ -1,210 +1,30 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}Contacts{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <h1><i class="ph ph-users"></i> Contacts</h1>
-    <p>Browse, filter, and manage contacts</p>
+    {% include "components/contacts/contacts_nav.html" %}
     
-    <div class="action-buttons">
-        <a href="{% url 'contact_create' %}" class="btn">
-            <i class="ph ph-plus"></i> Add Contact
-        </a>
-        <a href="{% url 'contact_list_list' %}" class="btn">
-            <i class="ph ph-list"></i> View Contact Lists
-        </a>
-        <a href="{% url 'cohort_list' %}" class="btn">
-            <i class="ph ph-users-three"></i> View Cohorts
-        </a>
-    </div>
-</div>
-
-<div class="filter-section">
-    <form method="get" action="{% url 'contact_list' %}" class="filter-form" hx-get="{% url 'contact_list_results' %}" hx-target="#contact-list-container" hx-swap="innerHTML" hx-trigger="change delay:500ms from:select, submit">
-        <h3>Filter Contacts</h3>
-        <div class="filter-form-fields">
-            <div class="form-group">
-                <label for="{{ form.name.id_for_label }}">Name</label>
-                {{ form.name }}
-            </div>
+    <article>
+        <header>
+            <hgroup>
+                <h1>Contacts</h1>
+                <h2>Manage your contact database</h2>
+            </hgroup>
             
-            <div class="form-group">
-                <label for="{{ form.email.id_for_label }}">Email</label>
-                {{ form.email }}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.company.id_for_label }}">Company</label>
-                {{ form.company }}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.position.id_for_label }}">Position</label>
-                {{ form.position }}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.status.id_for_label }}">Status</label>
-                {{ form.status }}
-            </div>
-            
-            <div class="form-group form-actions">
-                <button type="submit" class="btn">Apply Filters</button>
-                <a href="{% url 'contact_list' %}">Clear</a>
-            </div>
+            <form hx-get="{% url 'contact_list_results' %}" hx-target="#results" hx-trigger="change, keyup">
+                <div class="grid">
+                    {% for field in form %}
+                        <div>
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </form>
+        </header>
+        
+        <div id="results">
+            {% include "components/contacts/contact_results.html" %}
         </div>
-    </form>
-</div>
-
-<div id="contact-list-container">
-    {% include 'components/contacts/contact_results.html' %}
-</div>
-{% endblock content %}
-
-{% block extra_css %}
-<style>
-    .header-section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .action-buttons {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .filter-section {
-        background-color: var(--background-alt);
-        padding: 1.5rem;
-        border-radius: 4px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .filter-form-fields {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .form-actions {
-        display: flex;
-        gap: 0.5rem;
-        align-items: flex-end;
-    }
-    
-    .form-group {
-        margin-bottom: 0;
-    }
-    
-    .table-container {
-        overflow-x: auto;
-        margin-bottom: 1.5rem;
-    }
-    
-    .contact-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;  /* Smaller text */
-    }
-    
-    .contact-table th,
-    .contact-table td {
-        padding: 0.5rem;  /* Less padding */
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;  /* Prevent wrapping */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 250px;  /* Set max width */
-    }
-    
-    .contact-table th {
-        background-color: var(--background-alt);
-        font-weight: bold;
-    }
-    
-    .contact-table tr:hover {
-        background-color: rgba(0, 0, 0, 0.02);
-    }
-    
-    .actions-cell {
-        white-space: nowrap;
-        display: flex;
-        gap: 0.25rem;
-        justify-content: left;  /* Left align actions */
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        background-color: var(--background-alt);
-        border-radius: 4px;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    .pagination {
-        margin-top: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .pagination-controls {
-        display: flex;
-        gap: 0.25rem;
-    }
-    
-    .current-page {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        background-color: var(--links);
-        color: white;
-        border-radius: 4px;
-    }
-    
-    .btn-danger {
-        background-color: #e74c3c;
-        border-color: #e74c3c;
-    }
-    
-    .btn-danger:hover {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    
-    .list-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .save-to-list-form {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .save-to-list-form select {
-        min-width: 200px;
-    }
-    
-    .save-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-</style>
+    </article>
 {% endblock %}

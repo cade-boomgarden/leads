@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Search #{{ search.id }}{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article>
+        <header>
+            <hgroup>
+                <h1>{{ search.get_method_display }} Search</h1>
+                <h2>{{ search.created_at|date:"M d, Y H:i" }}</h2>
+            </hgroup>
+        </header>
+        
+        {% if search_params %}
+        <div class="grid">
+            <div>
+                <h3>Search Parameters</h3>
+                <dl>
+                    <dt>Query</dt>
+                    <dd>{{ search_params.query }}</dd>
+                    <dt>Location</dt>
+                    <dd>
+                        {% if search_params.place_name %}
+                            {{ search_params.place_name }}
+                        {% elif search_params.latitude and search_params.longitude %}
+                            {{ search_params.latitude|floatformat:4 }}, {{ search_params.longitude|floatformat:4 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+        
+        <h3>Results ({{ companies|length }})</h3>
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Website</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies %}
+                <tr>
+                    <td><a href="{% url 'company_detail' company.id %}">{{ company.name }}</a></td>
+                    <td>{{ company.address|default:"-" }}</td>
+                    <td>{{ company.website_url|urlize }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No companies found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+{% endblock %}
