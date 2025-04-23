@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ validation.name }}{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article>
+        <header>
+            <hgroup>
+                <h1>{{ validation.name }}</h1>
+                <h2>Email Validation Batch</h2>
+            </hgroup>
+            <nav>
+                <a href="{% url 'zerobounce_validation_list' %}" role="button" class="outline">Back to List</a>
+                {% if validation.contact_list %}
+                <a href="{% url 'contact_list_detail' validation.contact_list.id %}" role="button">View Contact List</a>
+                {% endif %}
+            </nav>
+        </header>
+        
+        <div id="validation-status"
+             hx-get="{% url 'zerobounce_validation_detail' validation.id %}"
+             hx-trigger="{% if validation.status == 'pending' or validation.status == 'processing' %}every 5s{% endif %}"
+             hx-target="#validation-status">
+            {% include "components/finder/validation_status_card.html" %}
+        </div>
+        
+        <div class="grid">
+            <div>
+                <h3>Configuration</h3>
+                <dl>
+                    <dt>Max Validations</dt>
+                    <dd>{{ validation.max_validations|default:"No limit" }}</dd>
+                    <dt>Use IP Address</dt>
+                    <dd>{{ validation.use_ip|yesno:"Yes,No" }}</dd>
+                    <dt>Timeout</dt>
+                    <dd>{{ validation.timeout }} seconds</dd>
+                </dl>
+            </div>
+            
+            <div>
+                <h3>Timing</h3>
+                <dl>
+                    <dt>Created</dt>
+                    <dd>{{ validation.created_at|date:"M d, Y H:i:s" }}</dd>
+                    <dt>Last Updated</dt>
+                    <dd>{{ validation.updated_at|date:"M d, Y H:i:s" }}</dd>
+                    <dt>Completed</dt>
+                    <dd>{{ validation.completed_at|date:"M d, Y H:i:s"|default:"Not completed" }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        {% if contacts %}
+        <h3>Validated Contacts</h3>
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Sub-Status</th>
+                    <th>Processed At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td><a href="{% url 'contact_detail' contact.id %}">{{ contact.email }}</a></td>
+                    <td>
+                        {% if contact.zerobounce_status == 'valid' %}
+                            <span class="success">{{ contact.get_zerobounce_status_display }}</span>
+                        {% elif contact.zerobounce_status == 'invalid' %}
+                            <span class="danger">{{ contact.get_zerobounce_status_display }}</span>
+                        {% elif contact.zerobounce_status == 'catch-all' %}
+                            <span class="warning">{{ contact.get_zerobounce_status_display }}</span>
+                        {% elif contact.zerobounce_status == 'unknown' %}
+                            <span class="secondary">{{ contact.get_zerobounce_status_display }}</span>
+                        {% else %}
+                            <span class="contrast">{{ contact.get_zerobounce_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ contact.get_zerobounce_sub_status_display|default:"-" }}</td>
+                    <td>{{ contact.zerobounce_processed_at|date:"M d, Y H:i:s"|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'contact_detail' contact.id %}" class="secondary">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No contacts have been validated yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% elif validation.contact_list %}
+        <p>No validated contacts found in this list yet.</p>
+        {% endif %}
+    </article>
+{% endblock %}

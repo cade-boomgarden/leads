@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Finder Dashboard{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article>
+        <header>
+            <h1>Finder Dashboard</h1>
+            <p>Discover and manage leads from various sources</p>
+        </header>
+        
+        <div>
+            <div>
+                <h3>
+                    <i class="ph ph-buildings"></i> Recent Company Searches
+                    <a href="{% url 'serpapi_search' %}" class="contrast" style="float: right; font-size: 0.8em;">
+                        <i class="ph ph-plus"></i> New Search
+                    </a>
+                </h3>
+                <table role="grid">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Results</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for search in company_searches %}
+                        <tr>
+                            <td>{{ search.get_method_display }}</td>
+                            <td>{{ search.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ search.results_count }} companies</td>
+                            <td>
+                                <a href="{% url 'company_search_detail' search.id %}" class="outline">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No company searches yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 0.5rem;">
+                    <a href="{% url 'company_search_list' %}">View All</a>
+                </div>
+            </div>
+            
+            <div>
+                <h3>
+                    <i class="ph ph-users-three"></i> Recent Contact Searches
+                    <span style="float: right; font-size: 0.8em;">
+                        <a href="{% url 'webscrape_search' %}" class="contrast">
+                            <i class="ph ph-globe"></i> Web Scrape
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a href="{% url 'hunter_search' %}" class="contrast">
+                            <i class="ph ph-at"></i> Hunter
+                        </a>
+                    </span>
+                </h3>
+                <table role="grid">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Results</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for search in contact_searches %}
+                        <tr>
+                            <td>{{ search.get_method_display }}</td>
+                            <td>{{ search.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ search.results_count }} contacts</td>
+                            <td>
+                                <a href="{% url 'contact_search_detail' search.id %}" class="outline">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No contact searches yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 0.5rem;">
+                    <a href="{% url 'contact_search_list' %}">View All</a>
+                </div>
+            </div>
+        </div>
+        
+        <h3>
+            <i class="ph ph-check-circle"></i> Recent Email Validations
+            <a href="{% url 'zerobounce_validation' %}" class="contrast" style="float: right; font-size: 0.8em;">
+                <i class="ph ph-plus"></i> New Validation
+            </a>
+        </h3>
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Created</th>
+                    <th>Results</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for validation in email_validations %}
+                <tr>
+                    <td><a href="{% url 'zerobounce_validation_detail' validation.id %}">{{ validation.name }}</a></td>
+                    <td>
+                        {% if validation.status == 'pending' %}
+                            <span class="secondary">{{ validation.get_status_display }}</span>
+                        {% elif validation.status == 'processing' %}
+                            <span class="secondary">{{ validation.get_status_display }}</span>
+                            <div aria-busy="true"></div>
+                        {% elif validation.status == 'completed' %}
+                            <span class="success">{{ validation.get_status_display }}</span>
+                        {% elif validation.status == 'failed' %}
+                            <span class="danger">{{ validation.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <progress value="{{ validation.progress_percentage }}" max="100"></progress> 
+                        {{ validation.progress_percentage }}%
+                    </td>
+                    <td>{{ validation.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        Valid: {{ validation.valid_count }}, 
+                        Invalid: {{ validation.invalid_count }},
+                        Catch All: {{ validation.catch_all_count }},
+                        Unknown: {{ validation.unknown_count }},
+                        Other: {{ validation.other_count}}
+                    </td>
+                    <td>
+                        <a href="{% url 'zerobounce_validation_detail' validation.id %}" class="outline">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No email validations yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 0.5rem;">
+            <a href="{% url 'zerobounce_validation_list' %}">View All</a>
+        </div>
+    </article>
+{% endblock %}

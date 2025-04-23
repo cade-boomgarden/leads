@@ -8,7 +8,7 @@
         <header>
             <hgroup>
                 <h1>Cohorts</h1>
-                <a href="{% url 'cohort_create' %}" role="button">Create Cohort</a>
+                <a href="{% url 'cohort_create' %}"><i class="ph ph-plus"></i> Create Cohort</a>
             </hgroup>
         </header>
         
@@ -29,7 +29,7 @@
                     <td>{{ cohort.last_generated|date:"M d, Y H:i"|default:"Never" }}</td>
                     <td>
                         <a href="{% url 'cohort_update' cohort.id %}" class="secondary">Edit</a>
-                        <a href="{% url 'cohort_delete' cohort.id %}" class="contrast">Delete</a>
+                        <a href="{% url 'cohort_delete' cohort.id %}" class="pico-color-red-500">Delete</a>
                         <a href="{% url 'cohort_export' cohort.id %}" class="secondary">Export</a>
                     </td>
                 </tr>

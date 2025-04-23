@@ -1,9 +1,8 @@
 <nav class="secondary-nav">
     <ul>
+        <li><a href="{% url 'finder_dashboard' %}" class="secondary"><i class="ph ph-gauge"></i> Dashboard</a></li>
         <li><a href="{% url 'company_search_list' %}" class="secondary"><i class="ph ph-buildings"></i> Company Searches</a></li>
         <li><a href="{% url 'contact_search_list' %}" class="secondary"><i class="ph ph-users-three"></i> Contact Searches</a></li>
-        <li><a href="{% url 'serpapi_search' %}" class="secondary"><i class="ph ph-magnifying-glass"></i> SERP Company Search</a></li>
-        <li><a href="{% url 'webscrape_search' %}" class="secondary"><i class="ph ph-globe"></i> Web Scrape Contacts</a></li>
-        <li><a href="{% url 'hunter_search' %}" class="secondary"><i class="ph ph-at"></i> Hunter Domain Search</a></li>
+        <li><a href="{% url 'zerobounce_validation_list' %}" class="secondary"><i class="ph ph-check-circle"></i> Email Validations</a></li>
     </ul>
 </nav>

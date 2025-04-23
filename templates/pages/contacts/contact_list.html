@@ -20,7 +20,38 @@
                         </div>
                     {% endfor %}
                 </div>
-            </form>
+            </form>            <div class="grid">
+                <form method="post" action="{% url 'contact_list_add_from_filter' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="filter_params" value="{{ request.GET.urlencode }}">
+                    <input type="hidden" name="page_number" value="{{ contacts.number }}">
+                    
+                    <div class="grid">
+                        <div>
+                            <label for="contact_list_id">Add to List</label>
+                            <select name="contact_list_id" required>
+                                <option value="">Select a list...</option>
+                                {% for list in contact_lists %}
+                                <option value="{{ list.id }}">{{ list.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="save_type">Results to Add</label>
+                            <select name="save_type" required>
+                                <option value="page">Current Page ({{ contacts.start_index }} - {{ contacts.end_index }})</option>
+                                <option value="all">All Results ({{ contacts.paginator.count }})</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>&nbsp;</label>
+                            <button type="submit"><i class="ph ph-plus"></i> Add to List</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </header>
         
         <div id="results">

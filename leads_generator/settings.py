@@ -140,3 +140,5 @@ HUEY = RedisHuey('leads', connection_pool=pool, immediate=False)
 
 SERPAPI_API_KEY = os.environ.get('SERPAPI_API_KEY')
 HUNTER_API_KEY = os.environ.get('HUNTER_API_KEY')
+ZEROBOUNCE_API_KEY = os.environ.get('ZEROBOUNCE_API_KEY')
+

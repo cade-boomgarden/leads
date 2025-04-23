@@ -1,9 +1,47 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Q
 
-from .forms import SerpAPISearchForm, WebScrapeForm, HunterDomainSearchForm
-from .models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebScrapeParameters, HunterDomainSearchParameters
-from .tasks import execute_serpapi_search, execute_webscrape_search, execute_hunter_search
+from .models import (
+    CompanySearch, ContactSearch, SerpAPISearchParameters, 
+    WebScrapeParameters, HunterDomainSearchParameters,
+    EmailValidationBatch
+)
+from .forms import (
+    SerpAPISearchForm, WebScrapeForm, HunterDomainSearchForm,
+    ZeroBounceValidationForm
+)
+from .tasks import (
+    execute_serpapi_search, execute_webscrape_search, 
+    execute_hunter_search, validate_emails_with_zerobounce
+)
+from contacts.models import Contact, ContactList
+
+def finder_dashboard(request):
+    """Main dashboard view for the finder app showing recent searches and validations"""
+    # Get recent company searches
+    company_searches = CompanySearch.objects.all().order_by('-created_at')[:10]
+    
+    # Get recent contact searches
+    contact_searches = ContactSearch.objects.all().order_by('-created_at')[:10]
+    
+    # Get recent email validations
+    email_validations = EmailValidationBatch.objects.all().order_by('-created_at')[:10]
+    
+    # Update status of pending/processing validations
+    for validation in email_validations:
+        if validation.status in [EmailValidationBatch.ValidationStatus.PENDING, 
+                               EmailValidationBatch.ValidationStatus.PROCESSING]:
+            validation.update_task_status()
+    
+    context = {
+        'company_searches': company_searches,
+        'contact_searches': contact_searches,
+        'email_validations': email_validations,
+    }
+    
+    return render(request, 'pages/finder/dashboard.html', context)
 
 def serpapi_search(request):
     """View for the SerpAPI search form"""
@@ -41,7 +79,7 @@ def serpapi_search(request):
                 messages.warning(request, warning)
             
             messages.success(request, "Search initiated successfully! You'll be notified when it's complete.")
-            return redirect('search_list')
+            return redirect('company_search_list')
     else:
         form = SerpAPISearchForm()
     
@@ -116,7 +154,22 @@ def company_search_detail(request, search_id):
 
 def contact_search_list(request):
     """View for listing all contact searches"""
+    # Get all contact searches, regardless of method
     searches = ContactSearch.objects.all().order_by('-created_at')
+    
+    # Log the methods of searches found for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    method_counts = {}
+    for search in searches:
+        method = search.get_method_display()
+        if method in method_counts:
+            method_counts[method] += 1
+        else:
+            method_counts[method] = 1
+    
+    logger.info(f"Contact search methods count: {method_counts}")
+    
     return render(request, 'pages/finder/contact_search_list.html', {'searches': searches})
 
 def contact_search_detail(request, search_id):
@@ -142,17 +195,17 @@ def hunter_search(request):
     if request.method == 'POST':
         form = HunterDomainSearchForm(request.POST)
         if form.is_valid():
-            # Create ContactSearch object
-            contact_search = ContactSearch.objects.create(
-                method=ContactSearch.ContactSearchMethods.HUNTER,
-                results_count=0  # Will be updated when the search completes
-            )
-            
-            # Get the form data
+            # Get form data
             source_type = form.cleaned_data['source_type']
             domain = form.cleaned_data.get('domain', '')
             company = form.cleaned_data.get('company', '')
             company_list = form.cleaned_data.get('company_list')
+            
+            # Create ContactSearch object with correct method
+            contact_search = ContactSearch.objects.create(
+                method=ContactSearch.ContactSearchMethods.HUNTER,  # Ensure this is set to HUNTER
+                results_count=0  # Will be updated when the search completes
+            )
             
             # Convert multiple choice fields to lists
             seniority_levels = list(form.cleaned_data.get('seniority', []))
@@ -186,8 +239,147 @@ def hunter_search(request):
                 messages.warning(request, warning)
             
             messages.success(request, "Hunter search initiated successfully! You'll be notified when it's complete.")
-            return redirect('contact_search_list')
+            return redirect('contact_search_detail', search_id=contact_search.id)
     else:
         form = HunterDomainSearchForm()
     
     return render(request, 'pages/finder/hunter_search.html', {'form': form})
+
+def zerobounce_validation(request):
+    """View for validating emails using ZeroBounce API"""
+    if request.method == 'POST':
+        form = ZeroBounceValidationForm(request.POST)
+        if form.is_valid():
+            # Get form data
+            validation_type = form.cleaned_data['validation_type']
+            contact_list = form.cleaned_data.get('contact_list')
+            contact = form.cleaned_data.get('contact')
+            max_validations = form.cleaned_data.get('max_validations')
+            use_ip = form.cleaned_data.get('use_ip', True)
+            timeout = form.cleaned_data.get('timeout', 10)
+            
+            # Determine which contacts to validate
+            contact_id = None
+            contact_list_id = None
+            
+            if validation_type == 'contact':
+                contact_id = contact.id
+                validation_name = f"contact {contact.email}"
+            elif validation_type == 'contact_list':
+                contact_list_id = contact_list.id
+                validation_name = f"list '{contact_list.name}'"
+            elif validation_type == 'all_unverified':
+                # We'll handle this in the task by not specifying a list
+                validation_name = "all unverified contacts"
+            
+            # Queue the validation task
+            validate_emails_with_zerobounce(
+                contact_list_id=contact_list_id,
+                contact_id=contact_id,
+                max_validations=max_validations,
+                use_ip=use_ip,
+                timeout=timeout
+            )
+            
+            # Check available credits first
+            try:
+                from finder.services.zerobounce_service import ZeroBounceService
+                service = ZeroBounceService()
+                credits = service.get_credits()
+                messages.success(
+                    request, 
+                    f"Email validation for {validation_name} initiated! Available credits: {credits}"
+                )
+            except Exception as e:
+                messages.warning(
+                    request,
+                    f"Email validation for {validation_name} initiated! Unable to check available credits: {str(e)}"
+                )
+            
+            # Redirect based on validation type
+            if validation_type == 'contact':
+                return redirect('contact_detail', contact_id=contact.id)
+            elif validation_type == 'contact_list':
+                return redirect('contact_list_detail', list_id=contact_list.id)
+            else:
+                return redirect('contact_list')
+    else:
+        form = ZeroBounceValidationForm()
+        
+        # Pre-fill contact or contact list if provided in query string
+        contact_id = request.GET.get('contact_id')
+        contact_list_id = request.GET.get('contact_list_id')
+        
+        if contact_id:
+            try:
+                contact = Contact.objects.get(id=contact_id)
+                form.fields['contact'].initial = contact.id
+                form.fields['validation_type'].initial = 'contact'
+            except Contact.DoesNotExist:
+                pass
+        elif contact_list_id:
+            try:
+                contact_list = ContactList.objects.get(id=contact_list_id)
+                form.fields['contact_list'].initial = contact_list.id
+                form.fields['validation_type'].initial = 'contact_list'
+            except ContactList.DoesNotExist:
+                pass
+    
+    # Display current ZeroBounce credits
+    credits = "Unknown"
+    try:
+        from finder.services.zerobounce_service import ZeroBounceService
+        service = ZeroBounceService()
+        credits = service.get_credits()
+    except Exception:
+        pass
+    
+    return render(request, 'pages/finder/zerobounce_validation.html', {
+        'form': form,
+        'credits': credits
+    })
+
+def zerobounce_validation_list(request):
+    """View for listing all email validation batches"""
+    validation_batches = EmailValidationBatch.objects.all().order_by('-created_at')
+    
+    # Update status of pending/processing batches
+    for batch in validation_batches:
+        if batch.status in [EmailValidationBatch.ValidationStatus.PENDING, 
+                          EmailValidationBatch.ValidationStatus.PROCESSING]:
+            batch.update_task_status()
+    
+    return render(request, 'pages/finder/zerobounce_validation_list.html', {
+        'validation_batches': validation_batches
+    })
+
+def zerobounce_validation_detail(request, batch_id):
+    """View for showing details of a specific email validation batch"""
+    validation_batch = get_object_or_404(EmailValidationBatch, id=batch_id)
+    
+    # Update the status if it's still in progress
+    if validation_batch.status in [EmailValidationBatch.ValidationStatus.PENDING, 
+                                 EmailValidationBatch.ValidationStatus.PROCESSING]:
+        validation_batch.update_task_status()
+        # Refresh after update
+        validation_batch = EmailValidationBatch.objects.get(id=batch_id)
+    
+    # Get the validated contacts if a contact list is associated
+    contacts = []
+    if validation_batch.contact_list:
+        contacts = validation_batch.contact_list.contacts.filter(
+            zerobounce_status__isnull=False
+        ).order_by('-zerobounce_processed_at')[:100]  # Limit to 100 most recent validations
+    
+    # Check if this is an HTMX request for polling
+    if request.headers.get('HX-Request'):
+        # Return only the status card
+        return render(request, 'components/finder/validation_status_card.html', {
+            'validation': validation_batch
+        })
+    
+    # For normal requests, return the full detail view
+    return render(request, 'pages/finder/zerobounce_validation_detail.html', {
+        'validation': validation_batch,
+        'contacts': contacts
+    })

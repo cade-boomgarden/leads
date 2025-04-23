@@ -342,6 +342,24 @@ class Cohort(models.Model):
         help_text="List of job title keywords to match, in order of preference"
     )
     
+    # Fields for verification status filtering
+    include_verification_statuses = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of verification statuses to include (empty means include all)"
+    )
+    
+    include_verification_substatuses = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of verification sub-statuses to include (empty means include all)"
+    )
+    
+    exclude_unverified = models.BooleanField(
+        default=False,
+        help_text="Whether to exclude contacts that have never been verified"
+    )
+    
     # Generated contacts list
     contacts = models.ManyToManyField(
         'contacts.Contact',
@@ -381,6 +399,27 @@ class Cohort(models.Model):
             
             if not company_contacts:
                 continue  # Skip companies with no contacts
+            
+            # Apply verification filters if specified
+            if self.include_verification_statuses:
+                company_contacts = company_contacts.filter(
+                    zerobounce_status__in=self.include_verification_statuses
+                )
+            
+            if self.include_verification_substatuses:
+                company_contacts = company_contacts.filter(
+                    zerobounce_sub_status__in=self.include_verification_substatuses
+                )
+            
+            if self.exclude_unverified:
+                company_contacts = company_contacts.exclude(
+                    Q(zerobounce_status__isnull=True) | 
+                    Q(zerobounce_status='') | 
+                    Q(zerobounce_status=Contact.EmailStatus.UNVERIFIED)
+                )
+            
+            if not company_contacts:
+                continue  # Skip if no contacts match the verification criteria
             
             # Select contact based on the method
             selected_contact = None

@@ -5,6 +5,9 @@ from .models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebSc
 from .services.serpapi_service import SerpAPIService
 from .services.webscrape_service import WebScrapeService
 from companies.models import Company
+import logging
+
+logger = logging.getLogger(__name__)
 
 @task()
 def execute_serpapi_search(company_search_id, max_results=None):
@@ -138,6 +141,9 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
         company_list_id: ID of a CompanyList to search all domains in the list
     """
     try:
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # Get the ContactSearch and search parameters
         from finder.models import ContactSearch, HunterDomainSearchParameters
         from finder.services.hunter_service import HunterService
@@ -145,6 +151,11 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
         
         contact_search = ContactSearch.objects.get(id=contact_search_id)
         search_params = HunterDomainSearchParameters.objects.get(contact_search=contact_search)
+        
+        # Mark as hunter search explicitly
+        if contact_search.method != ContactSearch.ContactSearchMethods.HUNTER:
+            contact_search.method = ContactSearch.ContactSearchMethods.HUNTER
+            contact_search.save()
         
         # Create Hunter service
         hunter_service = HunterService()
@@ -166,6 +177,7 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
                 
                 # Execute domain search for this company
                 try:
+                    logger.info(f"Searching Hunter for company {company_obj.name} (domain: {company_obj.domain})")
                     results = hunter_service.domain_search(
                         domain=company_obj.domain,
                         limit=search_params.limit,
@@ -184,8 +196,9 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
                         contact_search.contacts.add(contact)
                     
                     total_contacts += len(contacts)
+                    logger.info(f"Found {len(contacts)} contacts for {company_obj.name}")
                 except Exception as e:
-                    print(f"Error searching Hunter for company {company_obj.name}: {str(e)}")
+                    logger.error(f"Error searching Hunter for company {company_obj.name}: {str(e)}")
                     # Continue with other companies
                     continue
         else:
@@ -201,6 +214,10 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
                 except Company.DoesNotExist:
                     # Will create contacts without company association
                     pass
+            
+            search_type = "domain" if domain_param else "company"
+            search_value = domain_param if domain_param else company_param
+            logger.info(f"Searching Hunter by {search_type}: {search_value}")
             
             # Execute domain search
             results = hunter_service.domain_search(
@@ -222,6 +239,7 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
                 contact_search.contacts.add(contact)
             
             total_contacts = len(contacts)
+            logger.info(f"Found {total_contacts} contacts for {search_type} {search_value}")
         
         # Update results count
         contact_search.results_count = total_contacts
@@ -231,6 +249,222 @@ def execute_hunter_search(contact_search_id, domain=None, company=None, company_
         
     except Exception as e:
         # Log the error
-        print(f"Error executing Hunter search #{contact_search_id}: {str(e)}")
+        logger.error(f"Error executing Hunter search #{contact_search_id}: {str(e)}")
         # Re-raise to mark task as failed
+        raise
+
+@task()
+def validate_emails_with_zerobounce(batch_id=None, contact_list_id=None, contact_id=None, max_validations=None, use_ip=True, timeout=10):
+    """
+    Task to validate emails using ZeroBounce API.
+    
+    Args:
+        batch_id (int): ID of EmailValidationBatch to track progress
+        contact_list_id (int, optional): ID of ContactList to validate emails for
+        contact_id (int, optional): ID of single Contact to validate
+        max_validations (int, optional): Maximum number of validations to perform
+        use_ip (bool): Whether to include IP address in validation
+        timeout (int): Timeout in seconds for API requests (3-60)
+    """
+    try:
+        from contacts.models import Contact, ContactList
+        from finder.services.zerobounce_service import ZeroBounceService
+        from finder.models import EmailValidationBatch
+        from django.utils import timezone
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        # Get or create the validation batch
+        validation_batch = None
+        if batch_id:
+            try:
+                validation_batch = EmailValidationBatch.objects.get(id=batch_id)
+                validation_batch.status = EmailValidationBatch.ValidationStatus.PROCESSING
+                validation_batch.save()
+            except EmailValidationBatch.DoesNotExist:
+                logger.error(f"EmailValidationBatch with ID {batch_id} not found")
+                return f"EmailValidationBatch with ID {batch_id} not found"
+        
+        # Create ZeroBounce service
+        zerobounce_service = ZeroBounceService()
+        
+        # Check available credits
+        try:
+            available_credits = zerobounce_service.get_credits()
+            logger.info(f"ZeroBounce credits available: {available_credits}")
+        except Exception as e:
+            logger.error(f"Error checking ZeroBounce credits: {str(e)}")
+            available_credits = 0
+            
+        if available_credits <= 0:
+            error_msg = "No ZeroBounce credits available for email validation"
+            logger.error(error_msg)
+            
+            if validation_batch:
+                validation_batch.status = EmailValidationBatch.ValidationStatus.FAILED
+                validation_batch.save()
+                
+            return error_msg
+        
+        # If max_validations not specified, use available credits
+        if max_validations is None:
+            max_validations = available_credits
+        else:
+            max_validations = min(max_validations, available_credits)
+        
+        # Get contacts to validate
+        contacts_to_validate = []
+        
+        if contact_id:
+            # Single contact validation
+            try:
+                contact = Contact.objects.get(id=contact_id)
+                contacts_to_validate = [contact]
+            except Contact.DoesNotExist:
+                error_msg = f"Contact with ID {contact_id} not found"
+                logger.error(error_msg)
+                
+                if validation_batch:
+                    validation_batch.status = EmailValidationBatch.ValidationStatus.FAILED
+                    validation_batch.save()
+                    
+                return error_msg
+        elif contact_list_id:
+            # ContactList validation
+            try:
+                contact_list = ContactList.objects.get(id=contact_list_id)
+                
+                # Filter contacts that haven't been validated or have unknown status
+                contacts_to_validate = list(contact_list.contacts.filter(
+                    zerobounce_status__in=[
+                        None, 
+                        '', 
+                        Contact.EmailStatus.UNVERIFIED,
+                        Contact.EmailStatus.UNKNOWN
+                    ]
+                ).order_by('email')[:max_validations])
+                
+                if not contacts_to_validate:
+                    # If no unverified contacts, try to get all contacts
+                    contacts_to_validate = list(contact_list.contacts.all().order_by('email')[:max_validations])
+            except ContactList.DoesNotExist:
+                error_msg = f"ContactList with ID {contact_list_id} not found"
+                logger.error(error_msg)
+                
+                if validation_batch:
+                    validation_batch.status = EmailValidationBatch.ValidationStatus.FAILED
+                    validation_batch.save()
+                    
+                return error_msg
+        else:
+            # No specific contacts provided
+            error_msg = "No contacts specified for validation"
+            logger.error(error_msg)
+            
+            if validation_batch:
+                validation_batch.status = EmailValidationBatch.ValidationStatus.FAILED
+                validation_batch.save()
+                
+            return error_msg
+        
+        # Log the number of contacts to validate
+        logger.info(f"Validating {len(contacts_to_validate)} contacts")
+        
+        # Track validation results
+        valid_count = 0
+        invalid_count = 0
+        catch_all_count = 0
+        unknown_count = 0
+        other_count = 0
+        error_count = 0
+        
+        # Process each contact
+        for i, contact in enumerate(contacts_to_validate):
+            try:
+                # Get IP address if available and requested
+                ip_address = None
+                if use_ip and contact.zerobounce_country:
+                    # If we already have country data, we might have IP data too
+                    ip_address = "127.0.0.1"  # Placeholder, would need actual IP tracking
+                
+                # Log the current validation
+                logger.info(f"Validating email {i+1}/{len(contacts_to_validate)}: {contact.email}")
+                
+                # Validate the email
+                result = zerobounce_service.validate_email(
+                    contact.email, 
+                    ip_address=ip_address,
+                    timeout=timeout
+                )
+                
+                # Log the validation result
+                logger.info(f"Validation result for {contact.email}: {result.get('status', 'unknown')}")
+                
+                # Update the contact with validation results
+                zerobounce_service.update_contact_from_validation(contact, result)
+                
+                # Track results by status
+                status = result.get('status', 'unknown')
+                if status == 'valid':
+                    valid_count += 1
+                elif status == 'invalid':
+                    invalid_count += 1
+                elif status == 'catch-all':
+                    catch_all_count += 1
+                elif status == 'unknown':
+                    unknown_count += 1
+                else:
+                    other_count += 1
+                
+                # Update batch progress periodically (every 5 validations)
+                if validation_batch and i % 5 == 0:
+                    validation_batch.valid_count = valid_count
+                    validation_batch.invalid_count = invalid_count
+                    validation_batch.catch_all_count = catch_all_count
+                    validation_batch.unknown_count = unknown_count
+                    validation_batch.other_count = other_count
+                    validation_batch.error_count = error_count
+                    validation_batch.save()
+                    
+            except Exception as e:
+                logger.error(f"Error validating email {contact.email}: {str(e)}")
+                error_count += 1
+                continue
+        
+        # Update the validation batch with results
+        if validation_batch:
+            validation_batch.valid_count = valid_count
+            validation_batch.invalid_count = invalid_count
+            validation_batch.catch_all_count = catch_all_count
+            validation_batch.unknown_count = unknown_count
+            validation_batch.other_count = other_count
+            validation_batch.error_count = error_count
+            validation_batch.status = EmailValidationBatch.ValidationStatus.COMPLETED
+            validation_batch.completed_at = timezone.now()
+            validation_batch.save()
+        
+        # Return a summary of results
+        result_summary = (
+            f"Validated {len(contacts_to_validate)} emails. Results: "
+            f"{valid_count} valid, {invalid_count} invalid, "
+            f"{catch_all_count} catch-all, {unknown_count} unknown, "
+            f"{other_count} other, {error_count} errors"
+        )
+        
+        logger.info(result_summary)
+        return result_summary
+            
+    except Exception as e:
+        logger.error(f"Error in ZeroBounce validation task: {str(e)}")
+        
+        # Update the validation batch status
+        if batch_id:
+            try:
+                validation_batch = EmailValidationBatch.objects.get(id=batch_id)
+                validation_batch.status = EmailValidationBatch.ValidationStatus.FAILED
+                validation_batch.save()
+            except EmailValidationBatch.DoesNotExist:
+                pass
+                
         raise

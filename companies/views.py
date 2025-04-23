@@ -235,7 +235,7 @@ def company_list_add_from_filter(request):
                     key, value = param.split('=', 1)
                     filter_dict[key] = value
             
-            # Apply the same filters as in the company_list view
+            # Apply filters
             if 'name' in filter_dict:
                 companies = companies.filter(name__icontains=filter_dict['name'])
             

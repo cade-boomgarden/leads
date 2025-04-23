@@ -1,6 +1,7 @@
 from django import forms
 from finder.models import CompanySearch, SerpAPISearchParameters, ContactSearch, WebScrapeParameters
 from companies.models import CompanyList
+from contacts.models import ContactList, Contact
 
 class SerpAPISearchForm(forms.Form):
     query = forms.CharField(
@@ -421,3 +422,73 @@ class HunterDomainSearchForm(forms.Form):
     def warnings(self):
         """Get any warning messages"""
         return getattr(self, '_warnings', [])
+    
+class ZeroBounceValidationForm(forms.Form):
+    """Form for validating emails using ZeroBounce API"""
+    
+    # Validation source
+    validation_type = forms.ChoiceField(
+        label="Validation Source",
+        choices=[
+            ('contact_list', 'Contact List'),
+            ('contact', 'Single Contact'),
+            ('all_unverified', 'All Unverified Contacts'),
+        ],
+        widget=forms.RadioSelect,
+        initial='contact_list',
+        help_text="Select what contacts to validate"
+    )
+    
+    contact_list = forms.ModelChoiceField(
+        label="Contact List",
+        queryset=ContactList.objects.all(),
+        required=False,
+        help_text="Select a contact list to validate emails for"
+    )
+    
+    contact = forms.ModelChoiceField(
+        label="Contact",
+        queryset=Contact.objects.all(),
+        required=False,
+        help_text="Select a single contact to validate"
+    )
+    
+    # Validation options
+    max_validations = forms.IntegerField(
+        label="Maximum Validations",
+        min_value=1,
+        max_value=1000,
+        initial=100,
+        required=False,
+        help_text="Maximum number of emails to validate (leave blank to validate all available)"
+    )
+    
+    use_ip = forms.BooleanField(
+        label="Include IP Address",
+        required=False,
+        initial=True,
+        help_text="Include IP address data with validation (when available)"
+    )
+    
+    timeout = forms.IntegerField(
+        label="Timeout",
+        min_value=3,
+        max_value=60,
+        initial=10,
+        help_text="Timeout in seconds for API requests (3-60)"
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        validation_type = cleaned_data.get('validation_type')
+        contact_list = cleaned_data.get('contact_list')
+        contact = cleaned_data.get('contact')
+        
+        # Validate based on selected type
+        if validation_type == 'contact_list' and not contact_list:
+            self.add_error('contact_list', "Contact List is required when 'Contact List' is selected.")
+        
+        if validation_type == 'contact' and not contact:
+            self.add_error('contact', "Contact is required when 'Single Contact' is selected.")
+            
+        return cleaned_data

@@ -8,7 +8,10 @@
         <header>
             <hgroup>
                 <h1>Contact Searches</h1>
-                <a href="{% url 'webscrape_search' %}" role="secondary"><i class="ph ph-plus"></i> New Search</a>
+                <div>
+                    <a href="{% url 'webscrape_search' %}" role="button" class="secondary"><i class="ph ph-globe"></i> New Web Scrape</a>
+                    <a href="{% url 'hunter_search' %}" role="button" class="secondary"><i class="ph ph-at"></i> New Hunter Search</a>
+                </div>
             </hgroup>
         </header>
         
@@ -24,7 +27,16 @@
             <tbody>
                 {% for search in searches %}
                 <tr>
-                    <td>{{ search.get_method_display }}</td>
+                    <td>
+                        {% if search.method == 'scrape' %}
+                            <i class="ph ph-globe"></i>
+                        {% elif search.method == 'hunter' %}
+                            <i class="ph ph-at"></i>
+                        {% elif search.method == 'apollo' %}
+                            <i class="ph ph-rocket-launch"></i>
+                        {% endif %}
+                        {{ search.get_method_display }}
+                    </td>
                     <td>{{ search.created_at|date:"M d, Y H:i" }}</td>
                     <td>{{ search.results_count }} contacts</td>
                     <td>

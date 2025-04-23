@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Email Validation{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article x-data="{ validationType: '{{ form.validation_type.value|default:'contact_list' }}' }">
+        <header>
+            <hgroup>
+                <h1>ZeroBounce Email Validation</h1>
+                <h2>Verify email addresses using ZeroBounce API</h2>
+            </hgroup>
+            <div class="grid">
+                <article class="secondary">
+                    <header>Available Credits</header>
+                    <p>{{ credits }}</p>
+                </article>
+            </div>
+        </header>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div>
+                <h3>Select Validation Source</h3>
+                <div>
+                    {{ form.validation_type.label_tag }}
+                    <div x-data>
+                        {% for radio in form.validation_type %}
+                        <label>
+                            <input type="radio" name="validation_type" value="{{ radio.data.value }}" 
+                                   @click="validationType = '{{ radio.data.value }}'"
+                                   {% if form.validation_type.value == radio.data.value %}checked{% endif %}>
+                            {{ radio.choice_label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.validation_type.help_text %}
+                    <small>{{ form.validation_type.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.validation_type.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="validationType === 'contact_list'">
+                    {{ form.contact_list.label_tag }}
+                    {{ form.contact_list }}
+                    {% if form.contact_list.help_text %}
+                    <small>{{ form.contact_list.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.contact_list.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div x-show="validationType === 'contact'">
+                    {{ form.contact.label_tag }}
+                    {{ form.contact }}
+                    {% if form.contact.help_text %}
+                    <small>{{ form.contact.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.contact.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                <h3>Validation Options</h3>
+                <div class="grid">
+                    <div>
+                        {{ form.max_validations.label_tag }}
+                        {{ form.max_validations }}
+                        {% if form.max_validations.help_text %}
+                        <small>{{ form.max_validations.help_text }}</small>
+                        {% endif %}
+                        {% for error in form.max_validations.errors %}
+                        <p role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    
+                    <div>
+                        {{ form.timeout.label_tag }}
+                        {{ form.timeout }}
+                        {% if form.timeout.help_text %}
+                        <small>{{ form.timeout.help_text }}</small>
+                        {% endif %}
+                        {% for error in form.timeout.errors %}
+                        <p role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label>
+                        {{ form.use_ip }}
+                        {{ form.use_ip.label }}
+                    </label>
+                    {% if form.use_ip.help_text %}
+                    <small>{{ form.use_ip.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div role="group">
+                <button type="submit">Start Validation</button>
+                <a href="{% url 'contact_list' %}" role="button" class="outline">Cancel</a>
+            </div>
+        </form>
+    </article>
+{% endblock %}

@@ -9,7 +9,7 @@ class ContactSearch(Search):
     class ContactSearchMethods(models.TextChoices):
         APOLLO = 'apollo', 'Apollo'
         HUNTER = 'hunter', 'Hunter'
-        SCRAPE = 'scrape', 'Scrape'
+        SCRAPE = 'scrape', 'Web Scrape'
 
     method = models.CharField(max_length=10, choices=ContactSearchMethods.choices, default=ContactSearchMethods.HUNTER)
     contacts = models.ManyToManyField('contacts.Contact', blank=True, related_name='contact_searches')
@@ -19,7 +19,7 @@ class ContactSearch(Search):
         verbose_name_plural = "Contact Searches"
 
     def __str__(self):
-        return f"{self.method} Search - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"{self.get_method_display()} Search - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 class CompanySearch(Search):
     class CompanySearchMethods(models.TextChoices):
@@ -519,3 +519,112 @@ class WebScrapeParameters(models.Model):
             'follow_robotstxt': self.follow_robotstxt,
             'user_agent': self.user_agent,
         }
+    
+class EmailValidationBatch(models.Model):
+    """
+    Model for tracking batches of email validations.
+    """
+    class ValidationStatus(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        PROCESSING = 'processing', 'Processing'
+        COMPLETED = 'completed', 'Completed'
+        FAILED = 'failed', 'Failed'
+    
+    # Identification
+    name = models.CharField(max_length=255, help_text="Name for this validation batch")
+    
+    # Related objects
+    contact_list = models.ForeignKey(
+        'contacts.ContactList',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='validation_batches'
+    )
+    
+    # Task tracking
+    task_id = models.CharField(max_length=255, blank=True, null=True, help_text="Huey task ID")
+    status = models.CharField(
+        max_length=20,
+        choices=ValidationStatus.choices,
+        default=ValidationStatus.PENDING
+    )
+    
+    # Configuration
+    max_validations = models.IntegerField(null=True, blank=True, help_text="Maximum validations to perform")
+    use_ip = models.BooleanField(default=True, help_text="Include IP addresses in validation")
+    timeout = models.IntegerField(default=10, help_text="API timeout in seconds")
+    
+    # Results
+    valid_count = models.IntegerField(default=0, help_text="Number of valid emails")
+    invalid_count = models.IntegerField(default=0, help_text="Number of invalid emails")
+    catch_all_count = models.IntegerField(default=0, help_text="Number of catch-all emails")
+    unknown_count = models.IntegerField(default=0, help_text="Number of unknown emails")
+    other_count = models.IntegerField(default=0, help_text="Number of other emails")
+    error_count = models.IntegerField(default=0, help_text="Number of errors")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
+    
+    @property
+    def total_processed(self):
+        """Return the total number of processed emails"""
+        return (
+            self.valid_count + 
+            self.invalid_count + 
+            self.catch_all_count + 
+            self.unknown_count +
+            self.other_count +
+            self.error_count
+        )
+    
+    @property
+    def progress_percentage(self):
+        """Return the progress as a percentage"""
+        if not self.max_validations:
+            return 100 if self.status == self.ValidationStatus.COMPLETED else 0
+        
+        return min(100, int((self.total_processed / self.max_validations) * 100))
+    
+    def update_task_status(self):
+        """Update the status based on the Huey task state"""
+        if not self.task_id:
+            return False
+        
+        # If the task is already complete or failed, no need to check
+        if self.status in [self.ValidationStatus.COMPLETED, self.ValidationStatus.FAILED]:
+            return True
+        
+        # If the task is still in progress
+        if self.status in [self.ValidationStatus.PENDING, self.ValidationStatus.PROCESSING]:
+            # If it's been more than an hour since the last update, consider it failed
+            from django.utils import timezone
+            one_hour_ago = timezone.now() - timezone.timedelta(hours=1)
+            
+            if self.updated_at < one_hour_ago:
+                # Task likely stalled or failed silently
+                self.status = self.ValidationStatus.FAILED
+                self.save()
+                return True
+            
+            # Check if we have any results, which would indicate progress
+            if self.total_processed > 0:
+                # If we have results but the task is still marked as pending, mark it as processing
+                if self.status == self.ValidationStatus.PENDING:
+                    self.status = self.ValidationStatus.PROCESSING
+                    self.save()
+                
+                # If we have the expected number of results, mark as complete
+                if self.max_validations and self.total_processed >= self.max_validations:
+                    self.status = self.ValidationStatus.COMPLETED
+                    self.completed_at = timezone.now()
+                    self.save()
+                    return True
+        
+        # If we couldn't determine the status, don't change anything
+        return True

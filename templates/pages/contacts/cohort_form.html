@@ -4,7 +4,7 @@
 {% block content %}
     {% include "components/contacts/contacts_nav.html" %}
     
-    <article>
+    <article x-data="{ selectionMethod: '{{ form.selection_method.value|default:'email_prefix' }}' }">
         <header>
             <h1>{{ title }}</h1>
         </header>
@@ -12,20 +12,137 @@
         <form method="post">
             {% csrf_token %}
             
-            <div class="grid">
-                {% for field in form %}
+            <h2>Basic Information</h2>
+            <div>
                 <div>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.help_text %}
-                    <small>{{ field.help_text }}</small>
-                    {% endif %}
-                    {% for error in field.errors %}
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                    {% for error in form.name.errors %}
                     <p role="alert">{{ error }}</p>
                     {% endfor %}
                 </div>
+                
+                <div>
+                    {{ form.company_list.label_tag }}
+                    {{ form.company_list }}
+                    {% if form.company_list.help_text %}
+                    <small>{{ form.company_list.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.company_list.errors %}
+                    <p role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                {{ form.description.label_tag }}
+                {{ form.description }}
+                {% for error in form.description.errors %}
+                <p role="alert">{{ error }}</p>
                 {% endfor %}
             </div>
+            
+            <h2>Selection Criteria</h2>
+            <div>
+                {{ form.selection_method.label_tag }}
+                <div x-data>
+                    {% for radio in form.selection_method %}
+                    <label>
+                        <input type="radio" name="selection_method" value="{{ radio.data.value }}" 
+                               @click="selectionMethod = '{{ radio.data.value }}'"
+                               {% if form.selection_method.value == radio.data.value %}checked{% endif %}>
+                        {{ radio.choice_label }}
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.selection_method.help_text %}
+                <small>{{ form.selection_method.help_text }}</small>
+                {% endif %}
+                {% for error in form.selection_method.errors %}
+                <p role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <div x-show="selectionMethod === 'email_prefix'" x-transition>
+                {{ form.email_prefix_hierarchy.label_tag }}
+                {{ form.email_prefix_hierarchy }}
+                {% if form.email_prefix_hierarchy.help_text %}
+                <small>{{ form.email_prefix_hierarchy.help_text }}</small>
+                {% endif %}
+                {% for error in form.email_prefix_hierarchy.errors %}
+                <p role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <div x-show="selectionMethod === 'department'" x-transition>
+                {{ form.target_department.label_tag }}
+                {{ form.target_department }}
+                {% if form.target_department.help_text %}
+                <small>{{ form.target_department.help_text }}</small>
+                {% endif %}
+                {% for error in form.target_department.errors %}
+                <p role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <div x-show="selectionMethod === 'seniority'" x-transition>
+                {{ form.minimum_seniority.label_tag }}
+                {{ form.minimum_seniority }}
+                {% if form.minimum_seniority.help_text %}
+                <small>{{ form.minimum_seniority.help_text }}</small>
+                {% endif %}
+                {% for error in form.minimum_seniority.errors %}
+                <p role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <div x-show="selectionMethod === 'job_title'" x-transition>
+                {{ form.job_title_keywords.label_tag }}
+                {{ form.job_title_keywords }}
+                {% if form.job_title_keywords.help_text %}
+                <small>{{ form.job_title_keywords.help_text }}</small>
+                {% endif %}
+                {% for error in form.job_title_keywords.errors %}
+                <p role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <h2>Verification Filters</h2>
+            <details>
+                <summary>Email Verification Status Filters</summary>
+                
+                <div>
+                    <label>
+                        {{ form.exclude_unverified }}
+                        {{ form.exclude_unverified.label }}
+                    </label>
+                    {% if form.exclude_unverified.help_text %}
+                    <small>{{ form.exclude_unverified.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="grid">
+                    <div>
+                        <h4>{{ form.include_verification_statuses.label }}</h4>
+                        <div class="scrollable-checkbox-list">
+                            {{ form.include_verification_statuses }}
+                        </div>
+                        {% if form.include_verification_statuses.help_text %}
+                        <small>{{ form.include_verification_statuses.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <h4>{{ form.include_verification_substatuses.label }}</h4>
+                        <div class="scrollable-checkbox-list">
+                            {{ form.include_verification_substatuses }}
+                        </div>
+                        {% if form.include_verification_substatuses.help_text %}
+                        <small>{{ form.include_verification_substatuses.help_text }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </details>
             
             <div role="group">
                 <button type="submit">{{ submit_text }}</button>
@@ -33,4 +150,21 @@
             </div>
         </form>
     </article>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .scrollable-checkbox-list {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid var(--form-element-border-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .scrollable-checkbox-list label {
+        display: block;
+        margin-bottom: 5px;
+    }
+</style>
 {% endblock %}

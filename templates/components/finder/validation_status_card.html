@@ -1,0 +1,42 @@
+<div class="grid">
+    <article class="secondary">
+        <header>Status</header>
+        <p>
+            {% if validation.status == 'pending' %}
+                <span class="secondary">{{ validation.get_status_display }}</span>
+                <div aria-busy="true"></div>
+            {% elif validation.status == 'processing' %}
+                <span class="secondary">{{ validation.get_status_display }}</span>
+                <div aria-busy="true"></div>
+            {% elif validation.status == 'completed' %}
+                <span class="success">{{ validation.get_status_display }}</span>
+                <i class="ph ph-check-circle"></i>
+            {% elif validation.status == 'failed' %}
+                <span class="danger">{{ validation.get_status_display }}</span>
+                <i class="ph ph-warning"></i>
+            {% endif %}
+        </p>
+    </article>
+    
+    <article class="secondary">
+        <header>Progress</header>
+        <p>
+            <progress value="{{ validation.progress_percentage }}" max="100"></progress>
+            {{ validation.progress_percentage }}% ({{ validation.total_processed }} / {{ validation.max_validations|default:validation.total_processed }})
+        </p>
+    </article>
+    
+    <article class="secondary">
+        <header>Results</header>
+        <p>
+            <ul>
+                <li>Valid: {{ validation.valid_count }}</li>
+                <li>Invalid: {{ validation.invalid_count }}</li>
+                <li>Catch-All: {{ validation.catch_all_count }}</li>
+                <li>Unknown: {{ validation.unknown_count }}</li>
+                <li>Other: {{ validation.other_count }}</li>
+                <li>Errors: {{ validation.error_count }}</li>
+            </ul>
+        </p>
+    </article>
+</div>

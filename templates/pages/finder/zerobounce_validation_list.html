@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Email Validations{% endblock %}
+
+{% block content %}
+    {% include "components/finder/finder_nav.html" %}
+    
+    <article>
+        <header>
+            <hgroup>
+                <h1>Email Validations</h1>
+                <a href="{% url 'zerobounce_validation' %}"><i class="ph ph-plus"></i> New Validation</a>
+            </hgroup>
+        </header>
+        
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Created</th>
+                    <th>Results</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for validation in validation_batches %}
+                <tr>
+                    <td><a href="{% url 'zerobounce_validation_detail' validation.id %}">{{ validation.name }}</a></td>
+                    <td>
+                        {% if validation.status == 'pending' %}
+                            <span class="secondary">{{ validation.get_status_display }}</span>
+                        {% elif validation.status == 'processing' %}
+                            <span class="secondary">{{ validation.get_status_display }}</span>
+                            <div aria-busy="true"></div>
+                        {% elif validation.status == 'completed' %}
+                            <span class="success">{{ validation.get_status_display }}</span>
+                        {% elif validation.status == 'failed' %}
+                            <span class="danger">{{ validation.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <progress value="{{ validation.progress_percentage }}" max="100"></progress> 
+                        {{ validation.progress_percentage }}%
+                    </td>
+                    <td>{{ validation.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        Valid: {{ validation.valid_count }}, 
+                        Invalid: {{ validation.invalid_count }}, 
+                        Catch-All: {{ validation.catch_all_count }},
+                        Unknown: {{ validation.unknown_count }}
+                    </td>
+                    <td>
+                        <a href="{% url 'zerobounce_validation_detail' validation.id %}" class="secondary">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No validations performed yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+{% endblock %}

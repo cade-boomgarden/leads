@@ -21,6 +21,38 @@
                     {% endfor %}
                 </div>
             </form>
+            <div class="grid">
+                <form method="post" action="{% url 'company_list_add_from_filter' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="filter_params" value="{{ request.GET.urlencode }}">
+                    <input type="hidden" name="page_number" value="{{ companies.number }}">
+                    
+                    <div class="grid">
+                        <div>
+                            <label for="company_list_id">Add to List</label>
+                            <select name="company_list_id" required>
+                                <option value="">Select a list...</option>
+                                {% for list in company_lists %}
+                                <option value="{{ list.id }}">{{ list.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="save_type">Results to Add</label>
+                            <select name="save_type" required>
+                                <option value="page">Current Page ({{ companies.start_index }} - {{ companies.end_index }})</option>
+                                <option value="all">All Results ({{ companies.paginator.count }})</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>&nbsp;</label>
+                            <button type="submit"><i class="ph ph-plus"></i> Add to List</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </header>
         
         <div id="results">

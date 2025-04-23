@@ -43,6 +43,40 @@
                         <dd>{{ cohort.job_title_keywords|join:", " }}</dd>
                     {% endif %}
                 </dl>
+
+                <h3>Verification Filters</h3>
+                <dl>
+                    <dt>Exclude Unverified</dt>
+                    <dd>{{ cohort.exclude_unverified|yesno:"Yes,No" }}</dd>
+                    
+                    {% if cohort.include_verification_statuses %}
+                    <dt>Included Statuses</dt>
+                    <dd>
+                        <ul>
+                        {% for status in cohort.include_verification_statuses %}
+                            <li>{{ status }}</li>
+                        {% endfor %}
+                        </ul>
+                    </dd>
+                    {% else %}
+                    <dt>Included Statuses</dt>
+                    <dd>All (no filtering)</dd>
+                    {% endif %}
+                    
+                    {% if cohort.include_verification_substatuses %}
+                    <dt>Included Sub-statuses</dt>
+                    <dd>
+                        <ul>
+                        {% for substatus in cohort.include_verification_substatuses %}
+                            <li>{{ substatus }}</li>
+                        {% endfor %}
+                        </ul>
+                    </dd>
+                    {% else %}
+                    <dt>Included Sub-statuses</dt>
+                    <dd>All (no filtering)</dd>
+                    {% endif %}
+                </dl>
             </div>
             
             <div>
@@ -53,6 +87,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Company</th>
+                            <th>Verification</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,10 +96,29 @@
                             <td><a href="{% url 'contact_detail' contact.id %}">{{ contact.first_name }} {{ contact.last_name }}</a></td>
                             <td>{{ contact.email }}</td>
                             <td>{{ contact.company.name|default:contact.organization_name|default:"-" }}</td>
+                            <td>
+                                {% if contact.zerobounce_status %}
+                                    {% if contact.zerobounce_status == 'valid' %}
+                                        <span class="success">{{ contact.get_zerobounce_status_display }}</span>
+                                    {% elif contact.zerobounce_status == 'invalid' %}
+                                        <span class="danger">{{ contact.get_zerobounce_status_display }}</span>
+                                    {% elif contact.zerobounce_status == 'catch-all' %}
+                                        <span class="warning">{{ contact.get_zerobounce_status_display }}</span>
+                                    {% else %}
+                                        <span class="secondary">{{ contact.get_zerobounce_status_display }}</span>
+                                    {% endif %}
+                                    
+                                    {% if contact.zerobounce_sub_status %}
+                                        <small>({{ contact.get_zerobounce_sub_status_display }})</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="secondary">Not Verified</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3">No contacts in this cohort</td>
+                            <td colspan="4">No contacts in this cohort</td>
                         </tr>
                         {% endfor %}
                     </tbody>
