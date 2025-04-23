@@ -5,7 +5,6 @@ from . import views
 urlpatterns = [
     # Deal URLs
     path('', views.deal_list, name='deal_list'),
-    path('results/', views.deal_list_results, name='deal_list_results'),
     path('create/<int:contact_id>/', views.deal_create, name='deal_create'),
     path('<int:deal_id>/', views.deal_detail, name='deal_detail'),
     path('<int:deal_id>/update/', views.deal_update, name='deal_update'),

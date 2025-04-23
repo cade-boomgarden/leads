@@ -281,11 +281,6 @@ def contact_list(request):
         
         if form.cleaned_data.get('status'):
             contacts = contacts.filter(status=form.cleaned_data['status'])
-        
-        if form.cleaned_data.get('zerobounce_status'):
-            contacts = contacts.filter(
-                zerobounce_status=form.cleaned_data['zerobounce_status']
-            )
     
     # Order contacts by name
     contacts = contacts.order_by('last_name', 'first_name')
@@ -298,58 +293,20 @@ def contact_list(request):
     # Get all contact lists for the save to list dropdown
     contact_lists = ContactList.objects.all().order_by('name')
     
-    return render(request, 'pages/contacts/contact_list.html', {
-        'contacts': page_obj,
-        'form': form,
-        'contact_lists': contact_lists
-    })
-
-def contact_list_results(request):
-    """View for HTMX to return just the contact list results"""
-    # This is similar to contact_list but returns only the results component
-    contacts = Contact.objects.all()
-    
-    # Initialize the filter form
-    form = ContactFilterForm(request.GET)
-    if form.is_valid():
-        # Apply filters if provided
-        if form.cleaned_data.get('name'):
-            name_query = form.cleaned_data['name']
-            contacts = contacts.filter(
-                Q(first_name__icontains=name_query) | Q(last_name__icontains=name_query)
-            )
-        
-        if form.cleaned_data.get('email'):
-            contacts = contacts.filter(email__icontains=form.cleaned_data['email'])
-        
-        if form.cleaned_data.get('company'):
-            company_query = form.cleaned_data['company']
-            contacts = contacts.filter(
-                Q(company__name__icontains=company_query) |
-                Q(organization_name__icontains=company_query)
-            )
-        
-        if form.cleaned_data.get('position'):
-            contacts = contacts.filter(position__icontains=form.cleaned_data['position'])
-        
-        if form.cleaned_data.get('status'):
-            contacts = contacts.filter(status=form.cleaned_data['status'])
-    
-    # Order contacts by name
-    contacts = contacts.order_by('last_name', 'first_name')
-    
-    # Add pagination
-    paginator = Paginator(contacts, 20)  # Show 20 contacts per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # Get all contact lists for the save to list dropdown
-    contact_lists = ContactList.objects.all().order_by('name')
-    
-    return render(request, 'components/contacts/contact_results.html', {
-        'contacts': page_obj,
-        'contact_lists': contact_lists
-    })
+    # Check if this is an HTMX request
+    if request.headers.get('HX-Request'):
+        # If HTMX request, return only the results component
+        return render(request, 'components/contacts/contact_results.html', {
+            'contacts': page_obj,
+            'contact_lists': contact_lists
+        })
+    else:
+        # For non-HTMX requests, return the full page
+        return render(request, 'pages/contacts/contact_list.html', {
+            'contacts': page_obj,
+            'form': form,
+            'contact_lists': contact_lists
+        })
 
 def contact_detail(request, contact_id):
     """View for showing details of a specific contact"""

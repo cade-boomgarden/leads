@@ -11,7 +11,7 @@
                 <h2>Manage your contact database</h2>
             </hgroup>
             
-            <form hx-get="{% url 'contact_list_results' %}" hx-target="#results" hx-trigger="change, keyup">
+            <form hx-get="{% url 'contact_list' %}" hx-target="#results" hx-trigger="change, keyup">
                 <div class="grid">
                     {% for field in form %}
                         <div>

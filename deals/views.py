@@ -78,60 +78,19 @@ def deal_list(request):
         'pipeline_value': pipeline_value,
     }
     
-    return render(request, 'pages/deals/deal_list.html', {
-        'deals': page_obj,
-        'form': form,
-        'stats': stats,
-    })
-
-def deal_list_results(request):
-    """View for HTMX to return just the deal list results"""
-    # Similar to deal_list but returns only the results component
-    deals = Deal.objects.all()
-    
-    # Initialize the filter form
-    form = DealFilterForm(request.GET)
-    if form.is_valid():
-        # Apply filters if provided
-        if form.cleaned_data.get('contact'):
-            contact_query = form.cleaned_data['contact']
-            deals = deals.filter(
-                Q(contact__first_name__icontains=contact_query) | 
-                Q(contact__last_name__icontains=contact_query)
-            )
-        
-        if form.cleaned_data.get('value_min'):
-            deals = deals.filter(value__gte=form.cleaned_data['value_min'])
-        
-        if form.cleaned_data.get('value_max'):
-            deals = deals.filter(value__lte=form.cleaned_data['value_max'])
-        
-        if form.cleaned_data.get('stage'):
-            deals = deals.filter(stage=form.cleaned_data['stage'])
-        
-        if form.cleaned_data.get('status'):
-            status = form.cleaned_data['status']
-            if status == 'won':
-                deals = deals.filter(is_won=True)
-            elif status == 'lost':
-                deals = deals.filter(is_lost=True)
-            elif status == 'active':
-                deals = deals.filter(is_won=False, is_lost=False)
-        
-        if form.cleaned_data.get('close_date_start'):
-            deals = deals.filter(estimated_close_date__gte=form.cleaned_data['close_date_start'])
-        
-        if form.cleaned_data.get('close_date_end'):
-            deals = deals.filter(estimated_close_date__lte=form.cleaned_data['close_date_end'])
-    
-    # Add pagination
-    paginator = Paginator(deals, 20)  # Show 20 deals per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    return render(request, 'components/deals/deal_results.html', {
-        'deals': page_obj,
-    })
+    # Check if this is an HTMX request
+    if request.headers.get('HX-Request'):
+        # If HTMX request, return only the results component
+        return render(request, 'components/deals/deal_results.html', {
+            'deals': page_obj,
+        })
+    else:
+        # For non-HTMX requests, return the full page
+        return render(request, 'pages/deals/deal_list.html', {
+            'deals': page_obj,
+            'form': form,
+            'stats': stats,
+        })
 
 def deal_detail(request, deal_id):
     """View for showing details of a specific deal"""

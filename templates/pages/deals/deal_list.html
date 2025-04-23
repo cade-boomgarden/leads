@@ -11,7 +11,7 @@
                 <h2>Total Pipeline Value: ${{ stats.pipeline_value|floatformat:2 }}</h2>
             </hgroup>
             
-            <form hx-get="{% url 'deal_list_results' %}" hx-target="#results" hx-trigger="change, keyup">
+            <form hx-get="{% url 'deal_list' %}" hx-target="#results" hx-trigger="change, keyup">
                 <div class="grid">
                     {% for field in form %}
                         <div>

@@ -336,63 +336,21 @@ def company_list(request):
     # Get all company lists for the save to list dropdown
     company_lists = CompanyList.objects.all().order_by('name')
     
-    return render(request, 'pages/companies/company_list.html', {
-        'companies': page_obj,
-        'form': form,
-        'company_lists': company_lists
-    })
-
-def company_list_results(request):
-    """View for HTMX to return just the company list results"""
-    # This is similar to company_list but returns only the results component
-    companies = Company.objects.all()
+    # Check if this is an HTMX request
+    if request.headers.get('HX-Request'):
+        # If HTMX request, return only the results component
+        return render(request, 'components/companies/company_results.html', {
+            'companies': page_obj,
+            'company_lists': company_lists
+        })
+    else:
+        # For non-HTMX requests, return the full page
+        return render(request, 'pages/companies/company_list.html', {
+            'companies': page_obj,
+            'form': form,
+            'company_lists': company_lists
+        })
     
-    # Initialize the filter form with dropdown choices
-    form = CompanyFilterForm(request.GET)
-    if form.is_valid():
-        # Apply filters if provided
-        if form.cleaned_data.get('name'):
-            companies = companies.filter(name__icontains=form.cleaned_data['name'])
-        
-        if form.cleaned_data.get('city'):
-            companies = companies.filter(city__icontains=form.cleaned_data['city'])
-        
-        # Handle both text and dropdown state filters
-        if form.cleaned_data.get('state'):
-            # Text field
-            state_query = form.cleaned_data['state']
-            companies = companies.filter(
-                Q(state__icontains=state_query) | Q(state_code__icontains=state_query)
-            )
-        elif form.cleaned_data.get('state_select'):
-            # Dropdown field
-            state_code = form.cleaned_data['state_select']
-            companies = companies.filter(state_code=state_code)
-        
-        # Handle both text and dropdown type filters
-        if form.cleaned_data.get('primary_type'):
-            # Text field
-            companies = companies.filter(primary_type__icontains=form.cleaned_data['primary_type'])
-        elif form.cleaned_data.get('primary_type_select'):
-            # Dropdown field
-            companies = companies.filter(primary_type=form.cleaned_data['primary_type_select'])
-    
-    # Order companies by name
-    companies = companies.order_by('name')
-    
-    # Add pagination
-    paginator = Paginator(companies, 20)  # Show 20 companies per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # Get all company lists for the save to list dropdown
-    company_lists = CompanyList.objects.all().order_by('name')
-    
-    return render(request, 'components/companies/company_results.html', {
-        'companies': page_obj,
-        'company_lists': company_lists
-    })
-
 def company_detail(request, company_id):
     """View for showing details of a specific company"""
     company = get_object_or_404(Company, id=company_id)

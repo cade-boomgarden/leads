@@ -46,24 +46,26 @@
 
 {% if deals.paginator.num_pages > 1 %}
 <nav>
-    <div role="group">
+    <ul>
         {% if deals.has_previous %}
-            <a href="?page=1" hx-get="?page=1" hx-target="#results" role="button">First</a>
-            <a href="?page={{ deals.previous_page_number }}" hx-get="?page={{ deals.previous_page_number }}" hx-target="#results" role="button">Previous</a>
+            <li><a href="?page=1" hx-get="?page=1" hx-target="#results">First</a></li>
+            <li><a href="?page={{ deals.previous_page_number }}" hx-get="?page={{ deals.previous_page_number }}" hx-target="#results">Previous</a></li>
+        {% else %}
+            <li><a aria-disabled="true">First</a></li>
+            <li><a aria-disabled="true">Previous</a></li>
         {% endif %}
-
-        {% for num in deals.paginator.page_range %}
-            {% if deals.number == num %}
-                <button aria-current="true">{{ num }}</button>
-            {% else %}
-                <a href="?page={{ num }}" hx-get="?page={{ num }}" hx-target="#results" role="button">{{ num }}</a>
-            {% endif %}
-        {% endfor %}
-
+        
+        <li>
+            <span>Page {{ deals.number }} of {{ deals.paginator.num_pages }}</span>
+        </li>
+        
         {% if deals.has_next %}
-            <a href="?page={{ deals.next_page_number }}" hx-get="?page={{ deals.next_page_number }}" hx-target="#results" role="button">Next</a>
-            <a href="?page={{ deals.paginator.num_pages }}" hx-get="?page={{ deals.paginator.num_pages }}" hx-target="#results" role="button">Last</a>
+            <li><a href="?page={{ deals.next_page_number }}" hx-get="?page={{ deals.next_page_number }}" hx-target="#results">Next</a></li>
+            <li><a href="?page={{ deals.paginator.num_pages }}" hx-get="?page={{ deals.paginator.num_pages }}" hx-target="#results">Last</a></li>
+        {% else %}
+            <li><a aria-disabled="true">Next</a></li>
+            <li><a aria-disabled="true">Last</a></li>
         {% endif %}
-    </div>
+    </ul>
 </nav>
 {% endif %}
