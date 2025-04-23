@@ -17,20 +17,6 @@ class SerpAPISearchForm(forms.Form):
         help_text="City, state, or specific location name (e.g., 'New York, NY')"
     )
     
-    latitude = forms.FloatField(
-        label="Latitude",
-        required=False,
-        widget=forms.NumberInput(attrs={'step': 'any'}),
-        help_text="Latitude coordinate (e.g., 40.7128)"
-    )
-    
-    longitude = forms.FloatField(
-        label="Longitude",
-        required=False,
-        widget=forms.NumberInput(attrs={'step': 'any'}),
-        help_text="Longitude coordinate (e.g., -74.0060)"
-    )
-    
     zoom = forms.IntegerField(
         label="Zoom Level",
         min_value=3,

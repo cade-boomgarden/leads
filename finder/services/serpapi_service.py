@@ -1,142 +1,58 @@
 import requests
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from django.conf import settings
 from finder.models import CompanySearch, SerpAPISearchParameters
 from companies.models import Company
+import serpapi
+from geopy.geocoders import Nominatim
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SerpAPIService:
     BASE_URL = "https://serpapi.com/search"
     
     def __init__(self):
+        logger.info("Initializing SerpAPIService")
         self.api_key = settings.SERPAPI_API_KEY
+        logger.info("SerpAPI API key loaded from settings, loading geolocator")
+        self.geolocator = Nominatim(user_agent="leads_generator")
+        logger.info("Geolocator initialized")
         if not self.api_key:
             raise ValueError("SerpAPI API key is required")
     
-    def search_companies(self, search_params):
-        """
-        Execute a search for companies using SerpAPI's Google Maps API
-        
-        Args:
-            search_params: SerpAPISearchParameters instance
-            
-        Returns:
-            dict: API response data
-        """
-        params = {
-            "engine": "google_maps",
-            "type": "search",
-            "api_key": self.api_key
-        }
-        
-        # Handle query and location more explicitly
-        if search_params.place_name:
-            # When using place name, combine it with the query
-            params["q"] = f"{search_params.query} {search_params.place_name}"
-        else:
-            # Just use the query alone
-            params["q"] = search_params.query
-            
-        # Only add ll parameter if both latitude and longitude are provided
-        if search_params.latitude is not None and search_params.longitude is not None:
-            params["ll"] = f"@{search_params.latitude},{search_params.longitude},{search_params.zoom}z"
-        
-        # Add any additional parameters from the search_params that might be relevant
-        if search_params.google_domain:
-            params["google_domain"] = search_params.google_domain
-            
-        if search_params.language:
-            params["hl"] = search_params.language
-            
-        if search_params.country:
-            params["gl"] = search_params.country
-        
-        # Make the API request
-        response = requests.get(self.BASE_URL, params=params)
-        response.raise_for_status()  # Raise exception for HTTP errors
-        
-        return response.json()
+    def get_account_info(self):
+        client = serpapi.Client(api_key=self.api_key)
+        return client.account()
     
-    def search_all_pages(self, search_params, max_results=None):
-        """
-        Search all pages of results up to max_results
-        
-        Args:
-            search_params: SerpAPISearchParameters instance
-            max_results: Maximum number of results to return (None for all)
-            
-        Returns:
-            list: List of company data dictionaries
-        """
+    def search_all_pages(self, search_params: SerpAPISearchParameters, max_results=None):
+        client = serpapi.Client(api_key=self.api_key)
+        logger.info("Starting search_all_pages")
         all_results = []
-        remaining_results = max_results if max_results else float('inf')
         
-        # Initial parameters for the API
+        # Build base parameters
         params = {
             "engine": "google_maps",
             "type": "search",
-            "api_key": self.api_key
+            "q": search_params.query,
         }
-        
-        # Handle query and location explicitly
+
         if search_params.place_name:
-            # When using place name, combine it with the query
-            params["q"] = f"{search_params.query} {search_params.place_name}"
-        else:
-            # Just use the query alone
-            params["q"] = search_params.query
-            
-        # Only add ll parameter if both latitude and longitude are provided
-        if search_params.latitude is not None and search_params.longitude is not None:
-            params["ll"] = f"@{search_params.latitude},{search_params.longitude},{search_params.zoom}z"
-        
-        # Add any additional parameters
-        if search_params.google_domain:
-            params["google_domain"] = search_params.google_domain
-            
-        if search_params.language:
-            params["hl"] = search_params.language
-            
-        if search_params.country:
-            params["gl"] = search_params.country
-        
-        # Process all pages or until max_results is reached
-        while remaining_results > 0:
-            # Execute search
-            response = requests.get(self.BASE_URL, params=params)
-            response.raise_for_status()
-            results = response.json()
-            
-            # Extract local results
-            if "local_results" in results:
-                # Get current page results
-                current_results = results["local_results"]
-                
-                # Determine how many to take from this page
-                results_to_take = min(len(current_results), remaining_results)
-                
-                # Add the results to our list
-                all_results.extend(current_results[:results_to_take])
-                
-                # Update remaining results
-                remaining_results -= results_to_take
-                
-                # Check if we have a next page
-                if "serpapi_pagination" in results and "next" in results["serpapi_pagination"] and remaining_results > 0:
-                    # Extract the 'start' parameter from the next URL
-                    next_url = results["serpapi_pagination"]["next"]
-                    
-                    # Get the start parameter for the next page
-                    start_match = re.search(r'start=(\d+)', next_url)
-                    if start_match:
-                        params["start"] = start_match.group(1)
-                    else:
-                        break  # Can't find start parameter, exit loop
-                else:
-                    break  # No more pages or we have enough results
-            else:
-                break  # No results found
-        
+            # Use separate parameter for location
+            try:
+                location = self.geolocator.geocode(search_params.place_name, timeout=10)
+                params["ll"] = f"@{location.latitude},{location.longitude},{search_params.zoom}z"
+            except Exception as e:
+                logger.info(f"Error geocoding place name '{search_params.place_name}': {e}")
+                return all_results
+        logger.info(params)
+        results = client.search(params)
+        all_results += results.get("local_results", [])
+        while results.next_page_url and (len(all_results) < max_results if max_results else True):
+            results = results.next_page()
+            all_results += results.get("local_results", [])
+
         return all_results
     
     def create_companies_from_results(self, results, company_search):

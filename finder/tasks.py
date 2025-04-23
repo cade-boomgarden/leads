@@ -31,12 +31,7 @@ def execute_serpapi_search(company_search_id, max_results=None):
         companies = service.create_companies_from_results(results, company_search)
         
         # Update results count (safely handle None result)
-        if companies is not None:
-            company_search.results_count = len(companies)
-        else:
-            company_search.results_count = 0
-            companies = []  # Ensure we have an empty list for logging
-        
+        company_search.results_count = len(companies) if companies is not None else 0
         company_search.save()
         
         return f"Found {company_search.results_count} companies for search #{company_search_id}"
@@ -467,4 +462,54 @@ def validate_emails_with_zerobounce(batch_id=None, contact_list_id=None, contact
             except EmailValidationBatch.DoesNotExist:
                 pass
                 
+        raise
+
+from huey.contrib.djhuey import task
+
+@task()
+def debug_execute_serpapi_search(company_search_id, max_results=None):
+    """
+    Execute a SerpAPI search as a background task with enhanced debugging
+    
+    Args:
+        company_search_id: ID of the CompanySearch to process
+        max_results: Maximum number of results to return (None for all)
+    """
+    try:
+        logger.debug(f"Starting debug_execute_serpapi_search with company_search_id={company_search_id}, max_results={max_results}")
+        
+        # Get the CompanySearch and search parameters
+        company_search = CompanySearch.objects.get(id=company_search_id)
+        logger.debug(f"Found CompanySearch: {company_search}")
+        
+        search_params = SerpAPISearchParameters.objects.get(company_search=company_search)
+        logger.debug(f"Found SerpAPISearchParameters: query={search_params.query}, place_name={search_params.place_name}")
+        
+        # Create service and execute search
+        service = SerpAPIService()
+        logger.debug("Created SerpAPIService, starting search_all_pages")
+        
+        results = service.search_all_pages(search_params, max_results=max_results)
+        logger.debug(f"search_all_pages returned {len(results) if results else 0} results")
+        
+        # Create companies from results
+        companies = service.create_companies_from_results(results, company_search)
+        logger.debug(f"create_companies_from_results created/found {len(companies) if companies else 0} companies")
+        
+        # Update results count (safely handle None result)
+        if companies is not None:
+            company_search.results_count = len(companies)
+        else:
+            company_search.results_count = 0
+            companies = []  # Ensure we have an empty list for logging
+        
+        company_search.save()
+        logger.debug(f"Updated company_search.results_count to {company_search.results_count}")
+        
+        return f"Found {company_search.results_count} companies for search #{company_search_id}"
+        
+    except Exception as e:
+        # Log the error
+        logger.error(f"Error executing SerpAPI search #{company_search_id}: {str(e)}", exc_info=True)
+        # Re-raise to mark task as failed
         raise

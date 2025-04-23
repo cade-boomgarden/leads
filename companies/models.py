@@ -14,7 +14,7 @@ class Company(models.Model):
     # Common fields
     name = models.CharField(max_length=255)
     domain = models.CharField(max_length=255, unique=True)  # Unique identifier
-    website_url = models.URLField(blank=True, null=True)
+    website_url = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=50, blank=True, null=True)
@@ -48,7 +48,7 @@ class Company(models.Model):
     no_contact_delivery_available = models.BooleanField(default=False)
     
     # Thumbnail/Logo
-    thumbnail_url = models.URLField(blank=True, null=True)
+    thumbnail_url = models.TextField(blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
     
     # Apollo fields

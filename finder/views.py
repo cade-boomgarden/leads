@@ -17,6 +17,7 @@ from .tasks import (
     execute_hunter_search, validate_emails_with_zerobounce
 )
 from contacts.models import Contact, ContactList
+from .services import SerpAPIService
 
 def finder_dashboard(request):
     """Main dashboard view for the finder app showing recent searches and validations"""
@@ -44,46 +45,38 @@ def finder_dashboard(request):
     return render(request, 'pages/finder/dashboard.html', context)
 
 def serpapi_search(request):
-    """View for the SerpAPI search form"""
+    serpapi = SerpAPIService()
+    account_info = serpapi.get_account_info()
+    monthly_searches = account_info.get('searches_per_month', 0)
+    remaining_searches = account_info.get('plan_searches_left', 0)
     if request.method == 'POST':
         form = SerpAPISearchForm(request.POST)
         if form.is_valid():
-            # Create CompanySearch object
+            # Add geocoding logic here if needed
             company_search = CompanySearch.objects.create(
                 method=CompanySearch.CompanySearchMethods.SERPAPI,
-                results_count=0  # Will be updated when the search completes
+                results_count=0
             )
             
-            # Create SerpAPISearchParameters
+            # Create parameters with proper location handling
             search_params = SerpAPISearchParameters.objects.create(
                 company_search=company_search,
                 query=form.cleaned_data['query'],
                 place_name=form.cleaned_data.get('place_name'),
                 latitude=form.cleaned_data.get('latitude'),
                 longitude=form.cleaned_data.get('longitude'),
-                zoom=form.cleaned_data['zoom'],
-                google_domain='google.com',  # Always use US domain
-                language='en',  # Always use English
-                country='us',   # Always use US
-                per_page=20,    # Standard per page value
+                zoom=form.cleaned_data.get('zoom'),  # Force reasonable default
+                google_domain='google.com',
+                language='en',
+                country='us'
             )
             
-            # Queue the search task
-            execute_serpapi_search(
-                company_search.id, 
-                max_results=form.cleaned_data['max_results']
-            )
-            
-            # Display any warnings
-            for warning in getattr(form, 'warnings', []):
-                messages.warning(request, warning)
-            
-            messages.success(request, "Search initiated successfully! You'll be notified when it's complete.")
+            execute_serpapi_search(company_search.id)
             return redirect('company_search_list')
     else:
         form = SerpAPISearchForm()
     
-    return render(request, 'pages/finder/serpapi_search.html', {'form': form})
+    return render(request, 'pages/finder/serpapi_search.html', {'form': form, 'monthly_searches': monthly_searches, 'remaining_searches': remaining_searches})
 
 def webscrape_search(request):
     """View for the web scrape search form"""
