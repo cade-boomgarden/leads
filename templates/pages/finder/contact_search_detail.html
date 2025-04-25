@@ -51,6 +51,23 @@
                 </dl>
                 {% endif %}
             </div>
+
+            <div>
+                <h3>Add to Contact List</h3>
+                <form method="post" action="{% url 'add_contacts_to_list' search.id %}">
+                    {% csrf_token %}
+                    <div>
+                        <label for="contact_list_id">Select List</label>
+                        <select name="contact_list_id" required>
+                            <option value="">Select a list...</option>
+                            {% for list in contact_lists %}
+                            <option value="{{ list.id }}">{{ list.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit">Add All Contacts to List</button>
+                </form>
+            </div>
         </div>
         {% endif %}
         

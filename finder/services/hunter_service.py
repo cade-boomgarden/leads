@@ -18,6 +18,21 @@ class HunterService:
         self.api_key = api_key or getattr(settings, 'HUNTER_API_KEY', None)
         if not self.api_key:
             raise ValueError("Hunter API key is required")
+        
+    def get_account_info(self):
+        """
+        Get account information from Hunter API.
+        
+        Returns:
+            dict: Account information
+        """
+        try:
+            response = requests.get(f"{self.BASE_URL}/account", params={'api_key': self.api_key})
+            response.raise_for_status()  # Raise exception for HTTP errors
+            return response.json()['data']['requests']
+        except requests.RequestException as e:
+            logger.error(f"Hunter API request error: {str(e)}")
+            raise
     
     def domain_search(self, domain=None, company=None, limit=10, offset=0, 
                       email_type=None, seniority=None, department=None, 

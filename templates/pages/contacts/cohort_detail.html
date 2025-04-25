@@ -10,18 +10,20 @@
                 <h1>{{ cohort.name }}</h1>
                 <h2>{{ cohort.description }}</h2>
             </hgroup>
+            <form method="post" style="display: inline-block">
+                {% csrf_token %}
+                <button type="submit" name="regenerate" class="outline"><i class="ph ph-repeat"></i> Regenerate</button>
+            </form>
             <nav>
-                <form method="post" style="display: inline-block">
-                    {% csrf_token %}
-                    <button type="submit" name="regenerate">Regenerate</button>
-                </form>
-                <a href="{% url 'cohort_export' cohort.id %}" role="button">Export</a>
-                <a href="{% url 'cohort_update' cohort.id %}" role="button">Edit</a>
-                <a href="{% url 'cohort_delete' cohort.id %}" role="button" class="danger">Delete</a>
+                <ul>
+                    <li><a href="{% url 'cohort_export' cohort.id %}"><i class="ph ph-file-csv"></i> Export</a></li>
+                    <li><a href="{% url 'cohort_update' cohort.id %}"><i class="ph ph-pencil"></i> Edit</a></li>
+                    <li><a href="{% url 'cohort_delete' cohort.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i> Delete</a></li>
+                </ul>
             </nav>
         </header>
         
-        <div class="grid">
+        <div>
             <div>
                 <h3>Selection Criteria</h3>
                 <dl>

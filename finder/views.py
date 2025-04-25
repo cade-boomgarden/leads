@@ -17,7 +17,8 @@ from .tasks import (
     execute_hunter_search, validate_emails_with_zerobounce
 )
 from contacts.models import Contact, ContactList
-from .services import SerpAPIService
+from companies.models import Company, CompanyList
+from .services import SerpAPIService, HunterService, ZeroBounceService
 
 def finder_dashboard(request):
     """Main dashboard view for the finder app showing recent searches and validations"""
@@ -35,11 +36,30 @@ def finder_dashboard(request):
         if validation.status in [EmailValidationBatch.ValidationStatus.PENDING, 
                                EmailValidationBatch.ValidationStatus.PROCESSING]:
             validation.update_task_status()
+
+    serpapi = SerpAPIService()
+    # Get the current account info
+    serpapi_account_info = serpapi.get_account_info()
+    serpapi_remaining_searches = serpapi_account_info.get('plan_searches_left', 0)
+    hunter = HunterService()
+    # Get the current account info
+    hunter_account_info = hunter.get_account_info()
+    hunter_available_searches = hunter_account_info.get('searches', {}).get('available', 0)
+    hunter_used_searches = hunter_account_info.get('searches', {}).get('used', 0)
+    hunter_remaining_searches = hunter_available_searches - hunter_used_searches
+
+
+    zerobounce = ZeroBounceService()
+    # Get remaining credits
+    zerobounce_credits = zerobounce.get_credits()
     
     context = {
         'company_searches': company_searches,
         'contact_searches': contact_searches,
         'email_validations': email_validations,
+        'serpapi_remaining_searches': serpapi_remaining_searches,
+        'hunter_remaining_searches': hunter_remaining_searches,
+        'zerobounce_credits': zerobounce_credits,
     }
     
     return render(request, 'pages/finder/dashboard.html', context)
@@ -139,10 +159,14 @@ def company_search_detail(request, search_id):
     if search.method == CompanySearch.CompanySearchMethods.SERPAPI:
         search_params = search.serpapi_parameters
     
+    # Get all company lists for the dropdown
+    company_lists = CompanyList.objects.all().order_by('name')
+    
     return render(request, 'pages/finder/company_search_detail.html', {
         'search': search,
         'companies': companies,
-        'search_params': search_params
+        'search_params': search_params,
+        'company_lists': company_lists
     })
 
 def contact_search_list(request):
@@ -177,10 +201,14 @@ def contact_search_detail(request, search_id):
     elif search.method == ContactSearch.ContactSearchMethods.HUNTER:
         search_params = search.hunter_parameters
     
+    # Get all contact lists for the dropdown
+    contact_lists = ContactList.objects.all().order_by('name')
+    
     return render(request, 'pages/finder/contact_search_detail.html', {
         'search': search,
         'contacts': contacts,
-        'search_params': search_params
+        'search_params': search_params,
+        'contact_lists': contact_lists
     })
 
 def hunter_search(request):
@@ -376,3 +404,81 @@ def zerobounce_validation_detail(request, batch_id):
         'validation': validation_batch,
         'contacts': contacts
     })
+
+def add_contacts_to_list(request, search_id):
+    """Add all contacts from a search to a contact list"""
+    if request.method == 'POST':
+        search = get_object_or_404(ContactSearch, id=search_id)
+        contact_list_id = request.POST.get('contact_list_id')
+        
+        if not contact_list_id:
+            messages.error(request, "Please select a contact list.")
+            return redirect('contact_search_detail', search_id=search_id)
+        
+        # Get the contact list
+        try:
+            contact_list = ContactList.objects.get(id=contact_list_id)
+        except ContactList.DoesNotExist:
+            messages.error(request, "Selected contact list not found.")
+            return redirect('contact_search_detail', list_id=contact_list_id)
+        
+        # Get all contacts from the search
+        contacts = search.contacts.all()
+        
+        # Track how many contacts were added
+        added_count = 0
+        
+        # Add each contact to the list if not already present
+        for contact in contacts:
+            if contact not in contact_list.contacts.all():
+                contact_list.contacts.add(contact)
+                added_count += 1
+        
+        if added_count > 0:
+            messages.success(request, f"Added {added_count} contacts to '{contact_list.name}'.")
+        else:
+            messages.info(request, f"No new contacts were added to '{contact_list.name}'. All contacts were already in the list.")
+        
+        return redirect('contact_list_detail', search_id=search_id)
+    
+    # If not POST, redirect back to search detail
+    return redirect('contact_search_detail', search_id=search_id)
+
+def add_companies_to_list(request, search_id):
+    """Add all companies from a search to a company list"""
+    if request.method == 'POST':
+        search = get_object_or_404(CompanySearch, id=search_id)
+        company_list_id = request.POST.get('company_list_id')
+        
+        if not company_list_id:
+            messages.error(request, "Please select a company list.")
+            return redirect('company_search_detail', search_id=search_id)
+        
+        # Get the company list
+        try:
+            company_list = CompanyList.objects.get(id=company_list_id)
+        except CompanyList.DoesNotExist:
+            messages.error(request, "Selected company list not found.")
+            return redirect('company_search_detail', search_id=search_id)
+        
+        # Get all companies from the search
+        companies = search.companies.all()
+        
+        # Track how many companies were added
+        added_count = 0
+        
+        # Add each company to the list if not already present
+        for company in companies:
+            if company not in company_list.companies.all():
+                company_list.companies.add(company)
+                added_count += 1
+        
+        if added_count > 0:
+            messages.success(request, f"Added {added_count} companies to '{company_list.name}'.")
+        else:
+            messages.info(request, f"No new companies were added to '{company_list.name}'. All companies were already in the list.")
+        
+        return redirect('company_list_detail', list_id=company_list_id)
+    
+    # If not POST, redirect back to search detail
+    return redirect('company_search_detail', search_id=search_id)

@@ -78,7 +78,7 @@ def company_list_detail(request, list_id):
     companies = company_list.companies.all().order_by('name')
     
     # Add pagination
-    paginator = Paginator(companies, 20)  # Show 20 companies per page
+    paginator = Paginator(companies, 100)  # Show 100 companies per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -201,15 +201,15 @@ def company_list_add_search_results(request, list_id, search_id):
 
 def company_list_remove_company(request, list_id, company_id):
     """View for removing a company from a list"""
-    if request.method == 'POST':
-        company_list = get_object_or_404(CompanyList, id=list_id)
-        company = get_object_or_404(Company, id=company_id)
-        
-        if company in company_list.companies.all():
-            company_list.companies.remove(company)
-            messages.success(request, f"Removed '{company.name}' from the list.")
-        else:
-            messages.warning(request, f"'{company.name}' is not in this list.")
+    company_list: CompanyList = get_object_or_404(CompanyList, id=list_id)
+    company = get_object_or_404(Company, id=company_id)
+    if company_list in company.company_lists.all():
+        company.company_lists.remove(company_list)
+        company.save()
+        company_list.save()
+        messages.success(request, f"Removed '{company.name}' from the list.")
+    else:
+        messages.warning(request, f"'{company.name}' is not in this list.")
             
     return redirect('company_list_detail', list_id=list_id)
 
