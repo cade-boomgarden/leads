@@ -18,8 +18,8 @@
             <td>{{ company.state_code|default:company.state|default:"-" }}</td>
             <td>{{ company.primary_type|default:"-" }}</td>
             <td>
-                <a href="{% url 'company_update' company.id %}" class="secondary">Edit</a>
-                <a href="{% url 'company_delete' company.id %}" class="contrast">Delete</a>
+                <a href="{% url 'company_update' company.id %}" class="secondary"><i class="ph ph-pencil"></i></a>
+                <a href="{% url 'company_delete' company.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i></a>
             </td>
         </tr>
         {% empty %}

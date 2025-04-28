@@ -35,8 +35,8 @@
             </td>
             <td>{{ contact.get_status_display }}</td>
             <td>
-                <a href="{% url 'contact_update' contact.id %}" class="secondary">Edit</a>
-                <a href="{% url 'contact_delete' contact.id %}" class="contrast">Delete</a>
+                <a href="{% url 'contact_update' contact.id %}" class="secondary"><i class="ph ph-pencil"></i></a>
+                <a href="{% url 'contact_delete' contact.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i></a>
             </td>
         </tr>
         {% empty %}

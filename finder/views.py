@@ -439,7 +439,7 @@ def add_contacts_to_list(request, search_id):
         else:
             messages.info(request, f"No new contacts were added to '{contact_list.name}'. All contacts were already in the list.")
         
-        return redirect('contact_list_detail', search_id=search_id)
+        return redirect('contact_list_detail', list_id=contact_list_id)
     
     # If not POST, redirect back to search detail
     return redirect('contact_search_detail', search_id=search_id)

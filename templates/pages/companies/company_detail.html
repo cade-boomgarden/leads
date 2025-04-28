@@ -15,8 +15,10 @@
                 <h2>{{ company.primary_type|default:"Company" }}</h2>
             </hgroup>
             <nav>
-                <a href="{% url 'company_update' company.id %}" role="button">Edit</a>
-                <a href="{% url 'company_delete' company.id %}" role="button" class="danger">Delete</a>
+                <ul>
+                    <li><a href="{% url 'company_update' company.id %}"><i class="ph ph-pencil"></i> Edit</a></li>
+                    <li><a href="{% url 'company_delete' company.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i> Delete</a></li>
+                </ul>
             </nav>
         </header>
         

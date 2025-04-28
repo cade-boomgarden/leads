@@ -7,12 +7,25 @@
     <article>
         <header>
             <hgroup>
+                {% if contact.first_name %}
                 <h1>{{ contact.first_name }} {{ contact.last_name }}</h1>
-                <h2>{{ contact.position|default:"Contact" }}</h2>
+                {% else %}
+                <h1>{{ contact.email }}</h1>
+                {% endif %}
+                <p><strong>{{ contact.position|default:"Contact" }}</strong></p>
+                <p>
+                    {% if contact.company %}
+                        <a href="{% url 'company_detail' contact.company.id %}">{{ contact.company.name }}</a>
+                    {% else %}
+                        {{ contact.organization_name|default:"-" }}
+                    {% endif %}
+                </p>
             </hgroup>
             <nav>
-                <a href="{% url 'contact_update' contact.id %}" role="button">Edit</a>
-                <a href="{% url 'contact_delete' contact.id %}" role="button" class="danger">Delete</a>
+                <ul>
+                    <li><a href="{% url 'contact_update' contact.id %}"><i class="ph ph-pencil"></i> Edit</a></li>
+                    <li><a href="{% url 'contact_delete' contact.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i> Delete</a></li>
+                </ul>
             </nav>
         </header>
         

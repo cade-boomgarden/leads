@@ -26,9 +26,9 @@
                     <td><a href="{% url 'contact_list_detail' list.id %}">{{ list.name }}</a></td>
                     <td>{{ list.contacts.count }}</td>
                     <td>
-                        <a href="{% url 'contact_list_update' list.id %}" class="secondary">Edit</a>
-                        <a href="{% url 'contact_list_delete' list.id %}" class="contrast">Delete</a>
-                        <a href="{% url 'contact_list_export' list.id %}" class="secondary">Export</a>
+                        <a href="{% url 'contact_list_update' list.id %}" class="secondary"><i class="ph ph-pencil"></i></a>
+                        <a href="{% url 'contact_list_delete' list.id %}" class="pico-color-red-500"><i class="ph ph-trash"></i></a>
+                        <a href="{% url 'contact_list_export' list.id %}" class="secondary"><i class="ph ph-file-csv"></i></a>
                     </td>
                 </tr>
                 {% empty %}
