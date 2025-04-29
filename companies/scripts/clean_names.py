@@ -12,7 +12,7 @@ def clean_company_name(business_name):
         str: The cleaned business name
     """
     # Step 1: Remove everything after " - ", " (", or " |" if they exist
-    separators = [" - ", " (", " |"]
+    separators = [" - ", " (", " |", ":"]
     for separator in separators:
         if separator in business_name:
             business_name = business_name.split(separator)[0]

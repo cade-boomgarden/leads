@@ -7,6 +7,7 @@ from companies.models import Company
 import serpapi
 from geopy.geocoders import Nominatim
 import logging
+from companies.scripts.clean_names import clean_company_name
 
 logger = logging.getLogger(__name__)
 
@@ -126,8 +127,8 @@ class SerpAPIService:
                 
                 # Create the company
                 company = Company(
-                    name=result.get("title", ""),
-                    domain=domain,  # This is now guaranteed to be non-None
+                    name=clean_company_name(result.get("title", "")),
+                    domain=domain,
                     website_url=website_url,
                     phone=result.get("phone"),
                     serp_position=result.get("position"),
