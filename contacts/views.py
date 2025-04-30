@@ -400,7 +400,6 @@ def cohort_create(request):
     })
 
 def cohort_detail(request, cohort_id):
-    """View for showing details of a specific cohort"""
     cohort = get_object_or_404(Cohort, id=cohort_id)
     contacts = cohort.contacts.all().order_by('company__name', 'last_name', 'first_name')
     

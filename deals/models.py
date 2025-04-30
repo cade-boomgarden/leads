@@ -28,6 +28,7 @@ class Deal(models.Model):
         
     contact = models.ForeignKey('contacts.Contact', on_delete=models.SET_NULL, blank=True, null=True, related_name='deals')
     value = models.DecimalField(max_digits=10, decimal_places=2)
+    margin = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     stage = models.ForeignKey(DealStage, on_delete=models.SET_NULL, blank=True, null=True, related_name='deals')
     manual_conversion_probability = models.FloatField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)

@@ -21,7 +21,7 @@ class SerpAPISearchForm(forms.Form):
         label="Zoom Level",
         min_value=3,
         max_value=21,
-        initial=14,
+        initial=13,
         help_text="Zoom level (3-21, higher values = more zoomed in)"
     )
     
@@ -29,7 +29,7 @@ class SerpAPISearchForm(forms.Form):
         label="Maximum Results",
         min_value=1,
         max_value=100,
-        initial=20,
+        initial=100,
         help_text="Maximum number of results to return (1-100)"
     )
     

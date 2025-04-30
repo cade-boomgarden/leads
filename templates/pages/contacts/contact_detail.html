@@ -94,15 +94,11 @@
             </div>
             
             <div>
-                <h3>Cohorts</h3>
-                {% if contact.cohorts.all %}
-                <ul>
-                    {% for cohort in contact.cohorts.all %}
-                    <li><a href="{% url 'cohort_detail' cohort.id %}">{{ cohort.name }}</a></li>
-                    {% endfor %}
-                </ul>
+                <h3>Cohort</h3>
+                {% if contact.cohort %}
+                    <p><a href="{% url 'cohort_detail' contact.cohort.id %}">{{ contact.cohort.name }}</a></p>
                 {% else %}
-                <p>Not in any cohorts</p>
+                    <p>Not in any cohort</p>
                 {% endif %}
             </div>
         </div>

@@ -13,6 +13,7 @@ urlpatterns = [
     path('lists/<int:list_id>/add-search-results/<int:search_id>/', views.company_list_add_search_results, name='company_list_add_search_results'),
     path('lists/<int:list_id>/remove-company/<int:company_id>/', views.company_list_remove_company, name='company_list_remove_company'),
     path('lists/add-from-filter/', views.company_list_add_from_filter, name='company_list_add_from_filter'),
+    path('lists/<int:list_id>/remove-multiple/', views.company_list_remove_multiple, name='company_list_remove_multiple'),
     
     # Company URLs
     path('', views.company_list, name='company_list'),

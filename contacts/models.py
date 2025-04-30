@@ -165,6 +165,14 @@ class Contact(models.Model):
         blank=True,
         related_name='contacts'
     )
+
+    cohort = models.ForeignKey(
+        'Cohort', 
+        on_delete=models.SET_NULL,
+        related_name='contacts',
+        blank=True, 
+        null=True
+    )
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
@@ -360,12 +368,6 @@ class Cohort(models.Model):
         help_text="Whether to exclude contacts that have never been verified"
     )
     
-    # Generated contacts list
-    contacts = models.ManyToManyField(
-        'contacts.Contact',
-        blank=True,
-        related_name='cohorts'
-    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -386,19 +388,16 @@ class Cohort(models.Model):
         # Get all companies from the company list
         companies = self.company_list.companies.all()
         
-        # Clear existing contacts
-        self.contacts.clear()
-        
         # Counter for added contacts
         added_count = 0
         
         # Process each company
         for company in companies:
-            # Get all contacts for this company
-            company_contacts = company.contacts.all()
+            # Get all contacts for this company that don't already belong to a cohort
+            company_contacts = company.contacts.filter(cohort__isnull=True)
             
             if not company_contacts:
-                continue  # Skip companies with no contacts
+                continue  # Skip companies with no available contacts
             
             # Apply verification filters if specified
             if self.include_verification_statuses:
@@ -433,9 +432,10 @@ class Cohort(models.Model):
             elif self.selection_method == self.ContactSelectionMethod.JOB_TITLE:
                 selected_contact = self._select_by_job_title(company_contacts)
             
-            # Add the selected contact to the cohort
+            # Assign the selected contact to this cohort
             if selected_contact:
-                self.contacts.add(selected_contact)
+                selected_contact.cohort = self
+                selected_contact.save()
                 added_count += 1
         
         # Update last generated timestamp

@@ -1,0 +1,64 @@
+{% if messages %}
+<div x-data="{ messages: [] }" x-init="messages = Array.from(document.querySelectorAll('.message')).map((el) => ({ id: Math.random().toString(36).substr(2, 9), element: el })); messages.forEach(message => { setTimeout(() => { $el.querySelector(`[data-id='${message.id}']`).remove() }, 5000) })">
+    {% for message in messages %}
+        <div class="message" x-data="{ id: Math.random().toString(36).substr(2, 9) }" :data-id="id">
+            {% if message.tags == 'success' %}
+                <article class="pico-background-green-600">
+                    <div class="grid">
+                        <div>
+                            <i class="ph ph-check-circle"></i> {{ message }}
+                        </div>
+                        <div style="text-align: right;">
+                                <i class="ph ph-x" @click="$el.closest('.message').remove()"></i>
+                        </div>
+                    </div>
+                </article>
+            {% elif message.tags == 'error' %}
+                <article class="pico-background-red-600">
+                    <div class="grid">
+                        <div>
+                            <i class="ph ph-warning"></i> {{ message }}
+                        </div>
+                        <div style="text-align: right;">
+                                <i class="ph ph-x" @click="$el.closest('.message').remove()"></i>
+                        </div>
+                    </div>
+                </article>
+            {% elif message.tags == 'warning' %}
+                <article class="pico-background-orange-600">
+                    <div class="grid">
+                        <div>
+                            <i class="ph ph-warning-circle"></i> {{ message }}
+                        </div>
+                        <div style="text-align: right;">
+                                <i class="ph ph-x" @click="$el.closest('.message').remove()"></i>
+                        </div>
+                    </div>
+                </article>
+            {% elif message.tags == 'info' %}
+                <article class="pico-background-blue-600">
+                    <div class="grid">
+                        <div>
+                            <i class="ph ph-info"></i> {{ message }}
+                        </div>
+                        <div style="text-align: right;">
+                                <i class="ph ph-x" @click="$el.closest('.message').remove()"></i>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <article class="pico-background-gray-600">
+                    <div class="grid">
+                        <div>
+                            <i class="ph ph-bell"></i> {{ message }}
+                        </div>
+                        <div style="text-align: right;">
+                                <i class="ph ph-x" @click="$el.closest('.message').remove()"></i>
+                        </div>
+                    </div>
+                </article>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}

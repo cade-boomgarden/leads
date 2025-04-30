@@ -4,7 +4,7 @@
 {% block content %}
     {% include "components/companies/companies_nav.html" %}
     
-    <article>
+    <article x-data="{ selectAll: false, selectedCompanies: [] }">
         <header>
             <hgroup>
                 <h1>{{ company_list.name }}</h1>
@@ -20,32 +20,60 @@
             </nav>
         </header>
         
-        <table role="grid">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>City</th>
-                    <th>Type</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for company in companies %}
-                <tr>
-                    <td><a href="{% url 'company_detail' company.id %}">{{ company.name }}</a></td>
-                    <td>{{ company.city|default:"-" }}</td>
-                    <td>{{ company.primary_type|default:"-" }}</td>
-                    <td>
-                        <a href="{% url 'company_list_remove_company' company_list.id company.id %}" class="contrast">Remove</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4">No companies in this list</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <form method="post" action="{% url 'company_list_remove_multiple' company_list.id %}">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <label>
+                        <input type="checkbox" x-model="selectAll" @click="selectedCompanies = selectAll ? Array.from(document.querySelectorAll('input[name=\'company_ids\']')).map(c => c.value) : []">
+                        Select All
+                    </label>
+                </div>
+                <div>
+                    <button type="submit" class="danger" :disabled="selectedCompanies.length === 0">
+                        <i class="ph ph-trash"></i> Remove <span x-text="selectedCompanies.length"></span> Selected
+                    </button>
+                </div>
+            </div>
+            
+            <table role="grid">
+                <thead>
+                    <tr>
+                        <th><span class="visually-hidden">Select</span></th>
+                        <th>Name</th>
+                        <th>City</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="company_ids" value="{{ company.id }}" 
+                                   x-model="selectedCompanies" @change="selectAll = selectedCompanies.length === {{ companies|length }}">
+                        </td>
+                        <td><a href="{% url 'company_detail' company.id %}">{{ company.name }}</a></td>
+                        <td>{{ company.city|default:"-" }}</td>
+                        <td>{{ company.primary_type|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No companies in this list</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="grid">
+                <div>
+                </div>
+                <div>
+                    <button type="submit" class="danger" :disabled="selectedCompanies.length === 0">
+                        <i class="ph ph-trash"></i> Remove <span x-text="selectedCompanies.length"></span> Selected
+                    </button>
+                </div>
+            </div>
+        </form>
         
         {% if companies.paginator.num_pages > 1 %}
         <nav>

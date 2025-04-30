@@ -416,3 +416,33 @@ def company_delete(request, company_id):
     return render(request, 'pages/companies/company_confirm_delete.html', {
         'company': company
     })
+
+def company_list_remove_multiple(request, list_id):
+    """View for removing multiple companies from a list"""
+    if request.method == 'POST':
+        company_list = get_object_or_404(CompanyList, id=list_id)
+        company_ids = request.POST.getlist('company_ids')
+        
+        if not company_ids:
+            messages.warning(request, "No companies were selected.")
+            return redirect('company_list_detail', list_id=list_id)
+        
+        removed_count = 0
+        for company_id in company_ids:
+            try:
+                company = Company.objects.get(id=company_id)
+                if company in company_list.companies.all():
+                    company_list.companies.remove(company)
+                    removed_count += 1
+            except Company.DoesNotExist:
+                continue
+        
+        if removed_count > 0:
+            messages.success(request, f"Removed {removed_count} companies from the list.")
+        else:
+            messages.warning(request, "No companies were removed.")
+            
+        return redirect('company_list_detail', list_id=list_id)
+    
+    # If not POST, redirect back to the list detail
+    return redirect('company_list_detail', list_id=list_id)
